@@ -6,8 +6,8 @@ Simple script to show all CSE332L sections without any filtering.
 import sys
 import os
 
-# Add the parent directory to the path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Add the src directory to the path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'src')))
 
 from scraper import fetch_course_data
 

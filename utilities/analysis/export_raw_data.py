@@ -8,10 +8,11 @@ import pandas as pd
 import sys
 import os
 
-# Add the parent directory to the path so we can import from other modules
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Add the src directory to the path so we can import from other modules
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'src')))
 
 from scraper import fetch_course_data
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'config')))
 from config.settings import TARGET_COURSES
 
 def export_raw_data():
@@ -22,10 +23,10 @@ def export_raw_data():
     courses_df = fetch_course_data()  # This already returns only the target courses
     
     # Create data directory if it doesn't exist
-    os.makedirs('data', exist_ok=True)
+    os.makedirs('../../data', exist_ok=True)
     
     # Export target courses raw data
-    with open('data/target_courses_raw.txt', 'w') as f:
+    with open('../../data/target_courses_raw.txt', 'w') as f:
         f.write("TARGET COURSE SECTIONS (RAW DATA)\n")
         f.write("=" * 80 + "\n\n")
         
@@ -37,7 +38,7 @@ def export_raw_data():
     print(f"Target courses raw data exported to data/target_courses_raw.txt")
     
     # Group by course code for better organization
-    with open('data/target_courses_grouped.txt', 'w') as f:
+    with open('../../data/target_courses_grouped.txt', 'w') as f:
         f.write("TARGET COURSE SECTIONS (GROUPED BY COURSE)\n")
         f.write("=" * 80 + "\n\n")
         

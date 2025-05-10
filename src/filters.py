@@ -2,16 +2,23 @@
 """
 NSU Course Scheduler - Filter Implementation Module
 
-This module provides functions for filtering course sections based on specified criteria:
-- Classes starting after 12 PM
-- Schedule spanning only 4 days per week
-- Classes occurring only on ST (Sunday-Tuesday) and MW (Monday-Wednesday) slots
-- CSE 332 lecture and lab being in the same section
-- CSE 327 being section 1 or 7 with instructor "NBM"
+This module provides functions for filtering course sections based on 11 hard constraints:
+H1: Required lectures – choose exactly one lecture section for each of: BIO 103, CSE 327, CSE 332, EEE 452, ENG 115
+H2: Required labs – choose exactly one lab section for each of: CHE 101 L and PHY 108 L
+H3: Lecture start‐time ≥ 11:00 (inclusive) for every non-lab section
+H4: Lecture day pattern – every non-lab section's days must be either {S,T} (ST) or {M,W} (MW)
+H5: Lab day options – a lab's days may be any subset of {S,T,M,W,R,A}
+H6: CSE 332 lecture–lab pairing – the CSE 332 lecture and its matching CSE 332 L lab must have identical section numbers
+H7: CSE 327 instructor – must be taught by "NbM" (Section 1 or Section 7 in current data)
+H8: No time collisions – if two chosen sections share at least one day and their time intervals overlap, reject the pair
+H9: Seat availability – only select sections with seats > 0
+H10: No 08:00 labs – exclude any lab whose start_time is exactly "08:00"
+H11: At most 5 distinct class-days per week
 """
 
 import pandas as pd
 from datetime import datetime
+import re
 
 def apply_filters(courses_df):
     """
@@ -26,42 +33,69 @@ def apply_filters(courses_df):
     # Make a copy to avoid modifying the original
     filtered_df = courses_df.copy()
     
-    # Apply individual filters
-    filtered_df = filter_after_12pm(filtered_df)
+    # H3: Filter for lectures starting at or after 11:00 AM (not 12 PM anymore)
+    filtered_df = filter_after_11am(filtered_df)
+    
+    # H4: Filter for lecture courses on ST/MW only
     filtered_df = filter_st_mw_only(filtered_df)
+    
+    # H7: Filter for CSE327 sections with instructor NBM
     filtered_df = filter_cse327_sections(filtered_df)
     
-    # Filter for CSE 332 lecture and lab in same section requires special handling
-    # We'll keep all courses initially but check this constraint during schedule generation
+    # H9: Filter for sections with available seats
+    filtered_df = filter_available_seats(filtered_df)
+    
+    # H10: Filter out labs starting at 08:00
+    filtered_df = filter_early_morning_labs(filtered_df)
+    
+    # H6: CSE 332 lecture and lab in same section is handled during schedule generation
+    
+    # H11: At most 5 distinct class days per week is handled during schedule generation
     
     return filtered_df
 
-def is_after_12pm(time_str):
+def is_after_11am(time_str):
     """
-    Check if a start time is after 12 PM.
+    Check if a start time is at or after 11:00 AM.
     
     Args:
-        time_str (str): Time string in format like "1:00 PM"
+        time_str (str): Time string in format like "11:00 AM"
     
     Returns:
-        bool: True if time is after 12 PM, False otherwise
+        bool: True if time is at or after 11:00 AM, False otherwise
     """
     if not time_str or pd.isna(time_str):
         return False
     
     try:
-        # Handle "12:00 PM" case specially
-        if "12:00 PM" in time_str:
-            return True
+        # Parse the time string into components
+        match = re.match(r'(\d+):(\d+)\s*(AM|PM)', time_str)
+        if not match:
+            return False
+            
+        hour, minute, ampm = match.groups()
+        hour = int(hour)
         
-        # Check for PM indicator
-        return "PM" in time_str and not time_str.startswith("12:00")
+        # 11:00 AM or later in the morning
+        if ampm == "AM" and hour >= 11:
+            return True
+        # 12:00 AM is midnight, so this should return False
+        elif ampm == "AM" and hour == 12:
+            return False
+        # Any PM time (afternoon/evening)
+        elif ampm == "PM" and hour != 12:
+            return True
+        # 12:00 PM is noon
+        elif ampm == "PM" and hour == 12:
+            return True
+            
+        return False
     except:
         return False
 
-def filter_after_12pm(courses_df):
+def filter_after_11am(courses_df):
     """
-    Filter courses to include only those starting after 12 PM.
+    Filter courses to include only those starting at or after 11:00 AM.
     Only applies to lecture courses - lab courses can be at any time.
     
     Args:
@@ -70,22 +104,22 @@ def filter_after_12pm(courses_df):
     Returns:
         pandas.DataFrame: Filtered DataFrame
     """
-    # Create a mask for lecture courses (those that need to be after 12 PM)
+    # Create a mask for lecture courses (those that need to be after 11 AM)
     lecture_courses = ~courses_df['course_code'].str.contains('L', case=True, na=False)
-    after_12pm = courses_df['start_time'].apply(is_after_12pm)
+    after_11am = courses_df['start_time'].apply(is_after_11am)
     
     # Courses must be either:
-    # 1. Lab courses (no time restriction) OR
-    # 2. Lecture courses that start after 12 PM
-    mask = (~lecture_courses) | (lecture_courses & after_12pm)
+    # 1. Lab courses (no time restriction for now) OR
+    # 2. Lecture courses that start at or after 11:00 AM
+    mask = (~lecture_courses) | (lecture_courses & after_11am)
     
     return courses_df[mask]
 
 def is_st_mw_only(day_str, course_code):
     """
     Check if section days are appropriate based on course type.
-    Lecture courses must be on ST (Sunday-Tuesday) or MW (Monday-Wednesday) only.
-    Lab courses have no day restrictions.
+    H4: Lecture courses must be on ST (Sunday-Tuesday) or MW (Monday-Wednesday) only.
+    H5: Lab courses can be on any day of the week.
     
     Args:
         day_str (str): String containing day codes
@@ -100,11 +134,11 @@ def is_st_mw_only(day_str, course_code):
     # Check if this is a lab course
     is_lab = 'L' in course_code
     
-    # Lab courses have no day restrictions
+    # H5: Lab courses have no day restrictions
     if is_lab:
         return True
     else:
-        # Lecture courses must be on ST or MW only
+        # H4: Lecture courses must be on ST or MW only
         valid_day_combinations = ['ST', 'MW', 'S', 'M', 'T', 'W']
         
         # Sort the day string to normalize it (e.g., "TS" becomes "ST")
@@ -116,8 +150,8 @@ def is_st_mw_only(day_str, course_code):
 def filter_st_mw_only(courses_df):
     """
     Filter courses based on day patterns.
-    Lecture courses should be on ST/MW only.
-    Lab courses can also be on R (Thursday) but not on A (Saturday).
+    H4: Lecture courses should be on ST/MW only.
+    H5: Lab courses can be on any day.
     
     Args:
         courses_df (pandas.DataFrame): DataFrame containing course information
@@ -130,7 +164,7 @@ def filter_st_mw_only(courses_df):
 
 def filter_cse327_sections(courses_df):
     """
-    Filter CSE 327 to include only sections 1 or 7 with instructor "NBM".
+    H7: Filter CSE 327 to include only sections 1 or 7 with instructor "NBM".
     Leave other courses unchanged.
     
     Args:
@@ -152,9 +186,44 @@ def filter_cse327_sections(courses_df):
     # Combine masks to keep non-CSE 327 courses and filtered CSE 327 courses
     return courses_df[non_cse327_mask | cse327_mask]
 
+def filter_available_seats(courses_df):
+    """
+    H9: Filter out sections with 0 seats available.
+    
+    Args:
+        courses_df (pandas.DataFrame): DataFrame containing course information
+    
+    Returns:
+        pandas.DataFrame: Filtered DataFrame with sections having seats > 0
+    """
+    # Convert 'seats' column to numeric and filter rows with seats > 0
+    courses_df['seats'] = pd.to_numeric(courses_df['seats'], errors='coerce')
+    return courses_df[courses_df['seats'] > 0]
+
+def filter_early_morning_labs(courses_df):
+    """
+    H10: Filter out labs that start exactly at 08:00.
+    
+    Args:
+        courses_df (pandas.DataFrame): DataFrame containing course information
+    
+    Returns:
+        pandas.DataFrame: Filtered DataFrame without 08:00 labs
+    """
+    # Create a mask for lab courses
+    lab_courses = courses_df['course_code'].str.contains('L', case=True, na=False)
+    
+    # Create a mask for courses that start at 08:00
+    early_morning = courses_df['start_time'].str.startswith('08:00', na=False)
+    
+    # Remove lab courses that start at 08:00
+    mask = ~(lab_courses & early_morning)
+    
+    return courses_df[mask]
+
 def has_same_section_cse332(schedule):
     """
-    Check if CSE 332 lecture and lab are in the same section.
+    H6: Check if CSE 332 lecture and lab are in the same section.
     This function works on a schedule (subset of courses) rather than the full DataFrame.
     
     Args:
@@ -163,23 +232,26 @@ def has_same_section_cse332(schedule):
     Returns:
         bool: True if CSE 332 courses have matching sections, False otherwise
     """
-    cse332_courses = [course for course in schedule if 'CSE332' in course['course_code']]
+    cse332_lecture = None
+    cse332_lab = None
     
-    # If there are no CSE 332 courses or only one, return True
-    if len(cse332_courses) <= 1:
+    # Find CSE332 lecture and lab in the schedule
+    for course in schedule:
+        if 'CSE332' in course['course_code'] and 'L' not in course['course_code']:
+            cse332_lecture = course
+        elif 'CSE332L' in course['course_code']:
+            cse332_lab = course
+    
+    # If either lecture or lab is missing, this constraint is not applicable
+    if not cse332_lecture or not cse332_lab:
         return True
     
-    # MODIFIED: Instead of checking for matching section numbers,
-    # we'll just check that both lecture and lab are present in the schedule
-    lecture_course = any('CSE332L' not in course['course_code'] for course in cse332_courses)
-    lab_course = any('CSE332L' in course['course_code'] for course in cse332_courses)
-    
-    # Return True if both lecture and lab are included
-    return lecture_course and lab_course
+    # Check if section numbers match
+    return cse332_lecture['section'] == cse332_lab['section']
 
 def count_days_in_schedule(schedule):
     """
-    Count the total number of unique days in a schedule.
+    H11: Count the total number of unique days in a schedule.
     
     Args:
         schedule (list): List of course rows representing a potential schedule

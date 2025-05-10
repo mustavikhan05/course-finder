@@ -10,11 +10,12 @@ import pandas as pd
 import sys
 import os
 
-# Add the parent directory to the path so we can import from other modules
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Add the src directory to the path so we can import from other modules
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'src')))
 
 from scraper import fetch_course_data
-from filters import filter_after_12pm, filter_cse327_sections, is_after_12pm
+from filters import filter_after_11am, filter_cse327_sections, is_after_11am
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'config')))
 from config.settings import TARGET_COURSES
 
 def filter_lecture_courses_st_mw_only(df):
@@ -50,11 +51,11 @@ def analyze_sections():
         sections = courses_df[courses_df['course_code'].str.contains(course, case=False, na=False)]
         print(f"{course}: {len(sections)} sections")
     
-    # Apply time filter (after 12 PM for lectures only)
-    time_filtered_df = filter_after_12pm(courses_df)
+    # Apply time filter (after 11 AM for lectures only)
+    time_filtered_df = filter_after_11am(courses_df)
     
     # Show counts after time filter
-    print("\n==== AFTER 12 PM FILTER (LECTURES ONLY) ====")
+    print("\n==== AFTER 11 AM FILTER (LECTURES ONLY) ====")
     for course in ['BIO103', 'CHE101L', 'CSE327', 'CSE332/EEE336', 'CSE332L/EEE336L', 'EEE452', 'ENG115', 'PHY108L']:
         sections = time_filtered_df[time_filtered_df['course_code'].str.contains(course, case=False, na=False)]
         print(f"{course}: {len(sections)} sections")
@@ -147,8 +148,8 @@ def analyze_sections():
                 lecture = lecture_sections[lecture_sections['section'] == section_num].iloc[0]
                 lab = lab_sections[lab_sections['section'] == section_num].iloc[0]
                 
-                is_lecture_after_12pm = is_after_12pm(lecture['start_time'])
-                lecture_time_note = "after 12 PM" if is_lecture_after_12pm else "before 12 PM"
+                is_lecture_after_11am = is_after_11am(lecture['start_time'])
+                lecture_time_note = "after 11 AM" if is_lecture_after_11am else "before 11 AM"
                 
                 print(f"\nSection {section_num}:")
                 print(f"  Lecture: Days {lecture['days']}, Time {lecture['start_time']} - {lecture['end_time']} ({lecture_time_note})")

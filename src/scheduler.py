@@ -3,10 +3,19 @@
 NSU Course Scheduler - Schedule Generator Module
 
 This module is responsible for generating valid schedule combinations from
-filtered course sections, ensuring they meet all criteria and have no time conflicts.
+filtered course sections, ensuring they meet all 11 hard constraints and
+optimizing for the soft preferences:
+
+Soft Preferences:
+P1: 4 distinct class-days (perfect) vs 5 - +100 if 4 days, +50 if 5 days
+P2: Later lab starts - subtract (11 - start_hour) for each lab that starts before 11 AM
+P3: Compact days - subtract total idle minutes across the week
+
+Hard constraints are implemented as filters during schedule generation.
 """
 
 import pandas as pd
+import re
 from itertools import product
 from filters import has_same_section_cse332, count_days_in_schedule
 
@@ -34,10 +43,15 @@ def generate_schedules(filtered_df):
     
     # Generate all possible combinations
     valid_schedules = []
-    partial_schedules = []  # NEW: For storing partial schedules
+    partial_schedules = []  # For storing partial schedules
     
     # Get all course codes
     course_codes = list(course_options.keys())
+    
+    # Separate course codes into required lectures, required labs, and CSE332L lab
+    required_lectures = [code for code in course_codes if any(course in code for course in ["BIO103", "CSE327", "CSE332", "EEE452", "ENG115"]) and "L" not in code]
+    required_labs = [code for code in course_codes if any(course in code for course in ["CHE101L", "PHY108L"])]
+    cse332l_code = next((code for code in course_codes if "CSE332L" in code), None)
     
     # Add counters for debugging
     global debug_stats
@@ -47,7 +61,7 @@ def generate_schedules(filtered_df):
         'days_constraint_failures': 0,
         'cse332_pair_failures': 0,
         'valid_schedules': 0,
-        'valid_partial_schedules': 0  # NEW: For counting partial schedules
+        'valid_partial_schedules': 0
     }
     
     # Show how many sections are available for each course
@@ -56,7 +70,6 @@ def generate_schedules(filtered_df):
     
     # Use recursive approach to build schedules
     print("Starting schedule generation...")
-    # Pass partial_schedules list as a parameter
     generate_schedule_recursive(course_codes, 0, {}, course_options, valid_schedules, partial_schedules)
     
     # Print debug stats
@@ -64,10 +77,16 @@ def generate_schedules(filtered_df):
     for key, value in debug_stats.items():
         print(f"  {key}: {value}")
     
+    # Sort schedules by score (higher is better)
+    if valid_schedules:
+        valid_schedules.sort(key=lambda x: -score_schedule(x))
+        print(f"\nFound {len(valid_schedules)} valid complete schedules.")
+        return valid_schedules
+    
     # Sort and return partial schedules if no full schedules are found
-    if not valid_schedules and partial_schedules:
-        # Sort partial schedules by the number of courses (more is better)
-        partial_schedules.sort(key=lambda x: (-len(x), score_schedule(x)))
+    if partial_schedules:
+        # Sort partial schedules by the number of courses (more is better) and score
+        partial_schedules.sort(key=lambda x: (-len(x), -score_schedule(x)))
         print(f"\nFound {len(partial_schedules)} partial schedules (4+ courses).")
         print("Top 3 partial schedules:")
         for i, schedule in enumerate(partial_schedules[:3]):
@@ -105,7 +124,6 @@ def process_cse332_sections(course_options):
         sections = []
         
         # Group for easier comparison
-        course_dict = {}
         if "CSE332L" in course:
             for section in course_options[course]:
                 section_number = section['section']
@@ -126,26 +144,26 @@ def process_cse332_sections(course_options):
     matching_sections = set(lecture_sections.keys()) & set(lab_sections.keys())
     print(f"Matching sections between lecture and lab: {matching_sections}")
     
-    # MODIFIED APPROACH: Allow any lecture to pair with any lab
-    # Instead of requiring matching section numbers, we'll create all possible combinations
-    if len(lecture_sections) > 0 and len(lab_sections) > 0:
-        print("Creating flexible pairings between any lecture and any lab section")
-        
-        # For testing, let's create combinations of all available lecture and lab sections
-        lecture_course = next(code for code in cse332_courses if 'CSE332L' not in code)
-        lab_course = next(code for code in cse332_courses if 'CSE332L' in code)
-        
-        # Keep the original sections (don't modify)
-        print(f"Keeping all section options for lecture and lab")
-        # No need to update course_options here as we're keeping all sections
-        
-        # Print the number of possible combinations
-        print(f"This allows {len(lecture_sections) * len(lab_sections)} possible lecture-lab combinations")
+    # H6: CSE 332 lecture and lab must have identical section numbers
+    # If there are no matching sections, one or both course types will end up empty
+    if not matching_sections:
+        print("WARNING: No matching section numbers between CSE332 lecture and lab!")
+        print("This constraint cannot be satisfied. Schedule generation will likely fail.")
     else:
-        # Update course_options to empty lists if either lecture or lab is missing
+        print(f"Found {len(matching_sections)} valid section pairs for CSE332 lecture and lab.")
+        
+        # Keep only matching sections for both lecture and lab
         for course in cse332_courses:
-            course_options[course] = []
-        print("No valid CSE332 lecture/lab pairs can be created")
+            if "CSE332L" in course:
+                course_options[course] = [section for section in course_options[course] 
+                                          if section['section'] in matching_sections]
+            else:
+                course_options[course] = [section for section in course_options[course]
+                                          if section['section'] in matching_sections]
+                
+        print(f"After matching, course options updated:")
+        for course in cse332_courses:
+            print(f"  {course} now has {len(course_options[course])} sections")
 
 def generate_schedule_recursive(course_codes, index, current_schedule, course_options, valid_schedules, partial_schedules):
     """
@@ -174,8 +192,9 @@ def generate_schedule_recursive(course_codes, index, current_schedule, course_op
         if days_count <= 5 and has_valid_cse332:
             # We have a valid partial schedule
             # Add a copy to avoid reference issues when backtracking
-            partial_schedules.append(schedule.copy())
-            debug_stats['valid_partial_schedules'] += 1
+            if schedule not in partial_schedules:  # Avoid duplicates
+                partial_schedules.append(schedule.copy())
+                debug_stats['valid_partial_schedules'] += 1
     
     # Base case: we've assigned all courses
     if index == len(course_codes):
@@ -183,10 +202,10 @@ def generate_schedule_recursive(course_codes, index, current_schedule, course_op
         schedule = list(current_schedule.values())
         debug_stats['total_attempted'] += 1
         
-        # Check total days constraint
+        # H11: Check total days constraint (max 5 days)
         days_count = count_days_in_schedule(schedule)
         if days_count <= 5:
-            # Check if CSE 332 lecture and lab have same section
+            # H6: Check if CSE 332 lecture and lab have same section
             if has_same_section_cse332(schedule):
                 valid_schedules.append(schedule)
                 debug_stats['valid_schedules'] += 1
@@ -235,25 +254,9 @@ def generate_schedule_recursive(course_codes, index, current_schedule, course_op
             # Backtrack
             del current_schedule[current_code]
 
-def has_conflict(course1, other_courses):
-    """
-    Check if a course has a time conflict with any course in a list.
-    
-    Args:
-        course1 (dict): Course to check for conflicts
-        other_courses (list): List of courses to check against
-    
-    Returns:
-        bool: True if there's a conflict, False otherwise
-    """
-    for course2 in other_courses:
-        if has_time_conflict(course1, course2):
-            return True
-    return False
-
 def has_time_conflict(course1, course2):
     """
-    Check if two courses have overlapping days and times.
+    H8: Check if two courses have overlapping days and times.
     
     Args:
         course1 (dict): First course
@@ -317,28 +320,111 @@ def parse_time(time_str):
 
 def score_schedule(schedule):
     """
-    Score a schedule based on preferences (lower is better).
+    Score a schedule based on preferences (higher is better):
+    P1: 4 distinct class-days (perfect) vs 5 (+100 if 4 days, +50 if 5 days)
+    P2: Later lab starts (-penalty for each lab before 11 AM)
+    P3: Compact days (-penalty for idle time between classes)
     
     Args:
         schedule (list): List of courses in a schedule
     
     Returns:
-        float: Score value
+        float: Score value (higher is better)
     """
     score = 0
     
-    # Prefer fewer days
+    # P1: Prefer fewer days
     num_days = count_days_in_schedule(schedule)
-    score += num_days * 10
+    if num_days == 4:
+        score += 100  # Perfect: 4 days
+    elif num_days == 5:
+        score += 50   # Good: 5 days
     
-    # Prefer later start times
-    earliest_start = min(parse_time(course['start_time']) for course in schedule)
-    score += (15 - earliest_start) * 5 if earliest_start < 15 else 0
+    # P2: Prefer later lab starts
+    for course in schedule:
+        if 'L' in course['course_code']:  # It's a lab
+            start_hour = extract_hour(course['start_time'])
+            if start_hour < 11:
+                # Subtract penalty for early labs
+                score -= (11 - start_hour)
     
-    # Prefer more compact schedules (less time between classes)
-    # TODO: Implement more sophisticated compactness scoring
+    # P3: Prefer compact days (less idle time)
+    idle_minutes = calculate_idle_minutes(schedule)
+    score -= idle_minutes
     
     return score
+
+def extract_hour(time_str):
+    """
+    Extract hour from time string, converting to 24-hour format.
+    
+    Args:
+        time_str (str): Time string like "1:00 PM"
+    
+    Returns:
+        int: Hour in 24-hour format
+    """
+    if not time_str or pd.isna(time_str):
+        return 0
+    
+    try:
+        match = re.match(r'(\d+):(\d+)\s*(AM|PM)', time_str)
+        if not match:
+            return 0
+            
+        hour, minute, ampm = match.groups()
+        hour = int(hour)
+        
+        # Convert to 24-hour
+        if ampm == "PM" and hour < 12:
+            hour += 12
+        elif ampm == "AM" and hour == 12:
+            hour = 0
+            
+        return hour
+    except:
+        return 0
+
+def calculate_idle_minutes(schedule):
+    """
+    Calculate total idle minutes between classes in a week.
+    
+    Args:
+        schedule (list): List of courses in a schedule
+    
+    Returns:
+        int: Total idle minutes
+    """
+    total_idle_minutes = 0
+    
+    # Group classes by day
+    day_schedules = {}
+    for course in schedule:
+        for day in course['days']:
+            if day not in day_schedules:
+                day_schedules[day] = []
+            
+            # Add this class to the day's schedule
+            day_schedules[day].append({
+                'start': parse_time(course['start_time']),
+                'end': parse_time(course['end_time'])
+            })
+    
+    # For each day, sort classes by start time and calculate idle time
+    for day, classes in day_schedules.items():
+        if len(classes) <= 1:
+            continue
+            
+        # Sort by start time
+        sorted_classes = sorted(classes, key=lambda x: x['start'])
+        
+        # Calculate idle time between consecutive classes
+        for i in range(1, len(sorted_classes)):
+            gap_minutes = (sorted_classes[i]['start'] - sorted_classes[i-1]['end']) * 60
+            if gap_minutes > 0:
+                total_idle_minutes += gap_minutes
+    
+    return total_idle_minutes
 
 def format_schedule(schedule):
     """
@@ -368,6 +454,10 @@ def format_schedule(schedule):
     
     days = count_days_in_schedule(schedule)
     result.append(f"Total days: {days}")
+    
+    # Add schedule score
+    score = score_schedule(schedule)
+    result.append(f"Schedule score: {score}")
     
     return "\n".join(result)
 
