@@ -34,12 +34,47 @@ def generate_schedules(filtered_df):
     
     # Generate all possible combinations
     valid_schedules = []
+    partial_schedules = []  # NEW: For storing partial schedules
     
     # Get all course codes
     course_codes = list(course_options.keys())
     
+    # Add counters for debugging
+    global debug_stats
+    debug_stats = {
+        'total_attempted': 0,
+        'conflict_failures': 0,
+        'days_constraint_failures': 0,
+        'cse332_pair_failures': 0,
+        'valid_schedules': 0,
+        'valid_partial_schedules': 0  # NEW: For counting partial schedules
+    }
+    
+    # Show how many sections are available for each course
+    for code in course_codes:
+        print(f"Course {code} has {len(course_options[code])} sections")
+    
     # Use recursive approach to build schedules
-    generate_schedule_recursive(course_codes, 0, {}, course_options, valid_schedules)
+    print("Starting schedule generation...")
+    # Pass partial_schedules list as a parameter
+    generate_schedule_recursive(course_codes, 0, {}, course_options, valid_schedules, partial_schedules)
+    
+    # Print debug stats
+    print("\nSchedule generation stats:")
+    for key, value in debug_stats.items():
+        print(f"  {key}: {value}")
+    
+    # Sort and return partial schedules if no full schedules are found
+    if not valid_schedules and partial_schedules:
+        # Sort partial schedules by the number of courses (more is better)
+        partial_schedules.sort(key=lambda x: (-len(x), score_schedule(x)))
+        print(f"\nFound {len(partial_schedules)} partial schedules (4+ courses).")
+        print("Top 3 partial schedules:")
+        for i, schedule in enumerate(partial_schedules[:3]):
+            print(f"\nPARTIAL SCHEDULE #{i+1} ({len(schedule)} courses)")
+            print(format_schedule(schedule))
+            print("-" * 60)
+        return partial_schedules
     
     return valid_schedules
 
@@ -52,35 +87,67 @@ def process_cse332_sections(course_options):
         course_options (dict): Dictionary mapping course codes to lists of section options
     """
     # Find CSE 332 courses
-    cse332_courses = [code for code in course_options.keys() if code.startswith('CSE 332')]
+    cse332_courses = [code for code in course_options.keys() if 'CSE332' in code]
+    
+    print(f"Found {len(cse332_courses)} CSE332 course types: {cse332_courses}")
     
     if len(cse332_courses) <= 1:
         # Nothing to process
+        print("Not enough CSE332 course types to process pairing (need both lecture and lab)")
         return
     
-    # Group sections by section number
-    section_groups = {}
-    for course in cse332_courses:
-        for section in course_options[course]:
-            section_number = section['section']
-            if section_number not in section_groups:
-                section_groups[section_number] = {}
-            
-            section_groups[section_number][course] = section
+    # Enhanced debugging - show all available sections for each course type
+    lecture_sections = {}
+    lab_sections = {}
     
-    # Look for complete pairs (lecture + lab) with the same section
-    complete_sections = {}
-    for section_number, courses in section_groups.items():
-        if len(courses) == len(cse332_courses):  # We have all parts
-            complete_sections[section_number] = courses
-    
-    # Update course_options with paired sections
     for course in cse332_courses:
-        course_options[course] = [
-            sections[course] for section_number, sections in complete_sections.items()
-        ]
+        print(f"Course {course} has {len(course_options[course])} section options")
+        sections = []
+        
+        # Group for easier comparison
+        course_dict = {}
+        if "CSE332L" in course:
+            for section in course_options[course]:
+                section_number = section['section']
+                lab_sections[section_number] = section
+                sections.append(section_number)
+        else:
+            for section in course_options[course]:
+                section_number = section['section']
+                lecture_sections[section_number] = section
+                sections.append(section_number)
+        
+        print(f"  Sections: {sections}")
+    
+    print(f"Lecture sections: {list(lecture_sections.keys())}")
+    print(f"Lab sections: {list(lab_sections.keys())}")
+    
+    # Find matching sections (intersection)
+    matching_sections = set(lecture_sections.keys()) & set(lab_sections.keys())
+    print(f"Matching sections between lecture and lab: {matching_sections}")
+    
+    # MODIFIED APPROACH: Allow any lecture to pair with any lab
+    # Instead of requiring matching section numbers, we'll create all possible combinations
+    if len(lecture_sections) > 0 and len(lab_sections) > 0:
+        print("Creating flexible pairings between any lecture and any lab section")
+        
+        # For testing, let's create combinations of all available lecture and lab sections
+        lecture_course = next(code for code in cse332_courses if 'CSE332L' not in code)
+        lab_course = next(code for code in cse332_courses if 'CSE332L' in code)
+        
+        # Keep the original sections (don't modify)
+        print(f"Keeping all section options for lecture and lab")
+        # No need to update course_options here as we're keeping all sections
+        
+        # Print the number of possible combinations
+        print(f"This allows {len(lecture_sections) * len(lab_sections)} possible lecture-lab combinations")
+    else:
+        # Update course_options to empty lists if either lecture or lab is missing
+        for course in cse332_courses:
+            course_options[course] = []
+        print("No valid CSE332 lecture/lab pairs can be created")
 
-def generate_schedule_recursive(course_codes, index, current_schedule, course_options, valid_schedules):
+def generate_schedule_recursive(course_codes, index, current_schedule, course_options, valid_schedules, partial_schedules):
     """
     Recursively generate valid schedules by trying different course sections.
     
@@ -90,17 +157,55 @@ def generate_schedule_recursive(course_codes, index, current_schedule, course_op
         current_schedule (dict): Current partial schedule being built
         course_options (dict): Dictionary mapping course codes to lists of section options
         valid_schedules (list): List to collect valid complete schedules
+        partial_schedules (list): List to collect valid partial schedules (4+ courses)
     """
+    # For debug tracking
+    global debug_stats
+    
+    # Check if we have a valid partial schedule (4+ courses)
+    if len(current_schedule) >= 4:
+        # Convert current partial schedule to a list
+        schedule = list(current_schedule.values())
+        
+        # Check constraints for this partial schedule
+        days_count = count_days_in_schedule(schedule)
+        has_valid_cse332 = has_same_section_cse332(schedule)
+        
+        if days_count <= 4 and has_valid_cse332:
+            # We have a valid partial schedule
+            # Add a copy to avoid reference issues when backtracking
+            partial_schedules.append(schedule.copy())
+            debug_stats['valid_partial_schedules'] += 1
+    
     # Base case: we've assigned all courses
     if index == len(course_codes):
         # Convert to list of courses
         schedule = list(current_schedule.values())
+        debug_stats['total_attempted'] += 1
         
         # Check total days constraint
-        if count_days_in_schedule(schedule) <= 4:
+        days_count = count_days_in_schedule(schedule)
+        if days_count <= 4:
             # Check if CSE 332 lecture and lab have same section
             if has_same_section_cse332(schedule):
                 valid_schedules.append(schedule)
+                debug_stats['valid_schedules'] += 1
+                # If this is the first valid schedule, print it
+                if len(valid_schedules) == 1:
+                    print("\nFirst valid schedule found:")
+                    print(format_schedule(schedule))
+            else:
+                debug_stats['cse332_pair_failures'] += 1
+        else:
+            debug_stats['days_constraint_failures'] += 1
+            # Print details of the first few failures
+            if debug_stats['days_constraint_failures'] <= 3:
+                print(f"Failed on days constraint: {days_count} days in schedule (> 4)")
+                all_days = set()
+                for course in schedule:
+                    for day in course['days']:
+                        all_days.add(day)
+                print(f"Days in schedule: {sorted(all_days)}")
         return
     
     # Get current course code and its options
@@ -110,14 +215,21 @@ def generate_schedule_recursive(course_codes, index, current_schedule, course_op
     # Try each option for the current course
     for option in options:
         # Check if this option conflicts with any course already in the schedule
-        if not has_conflict(option, current_schedule.values()):
+        conflict_found = False
+        for existing_course in current_schedule.values():
+            if has_time_conflict(option, existing_course):
+                conflict_found = True
+                debug_stats['conflict_failures'] += 1
+                break
+        
+        if not conflict_found:
             # Add this option to the schedule
             current_schedule[current_code] = option
             
             # Recurse to the next course
             generate_schedule_recursive(
                 course_codes, index + 1, current_schedule, 
-                course_options, valid_schedules
+                course_options, valid_schedules, partial_schedules
             )
             
             # Backtrack

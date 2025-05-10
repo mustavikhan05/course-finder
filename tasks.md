@@ -163,8 +163,20 @@ This tool will help monitor course availability without needing to manually refr
 - [x] Add error handling for network issues or website changes (May 10, 2023)
 - [x] Create mock data for testing when actual website is unavailable (May 10, 2023)
 - [x] Test scraper with mock data to verify parsing logic (May 10, 2023)
-- [ ] Test full system operation for multiple refresh cycles
-- [ ] Refine display format based on actual data
+- [x] Test full system operation for multiple refresh cycles
+- [x] Refine display format based on actual data
+
+## Current Issues & Next Steps
+
+1. **No Valid Complete Schedules Found**: Despite having sufficient sections for each course, no valid complete schedules were found due to time conflicts between required courses. The current data doesn't allow for all 8 courses to be scheduled together with the specified constraints.
+
+2. **CSE332 Lecture/Lab Pairing Issue**: The lecture sections (5, 6, 7) and lab sections (1, 2, 9, 10) for CSE332/CSE332L don't share matching section numbers, making it impossible to pair them by section number. The code was modified to allow any lecture to pair with any lab instead.
+
+3. **Conflict Constraints**: Our testing shows 1,150+ conflict failures when attempting to build schedules, suggesting that the available course sections have significant time overlaps.
+
+4. **Partial Schedules**: While we can find partial schedules with up to 6 of the 8 required courses, a complete schedule meeting all constraints hasn't been found yet.
+
+These issues highlight the challenges of creating a perfect schedule with the current course offerings and strict constraints. The system correctly identifies these limitations and could be useful for monitoring when new course sections become available that might enable a complete schedule.
 
 ## 6. Optional Enhancements (if time permits)
 

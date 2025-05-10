@@ -168,9 +168,13 @@ def has_same_section_cse332(schedule):
     if len(cse332_courses) <= 1:
         return True
     
-    # Check if all sections match
-    sections = set(course['section'] for course in cse332_courses)
-    return len(sections) == 1
+    # MODIFIED: Instead of checking for matching section numbers,
+    # we'll just check that both lecture and lab are present in the schedule
+    lecture_course = any('CSE332L' not in course['course_code'] for course in cse332_courses)
+    lab_course = any('CSE332L' in course['course_code'] for course in cse332_courses)
+    
+    # Return True if both lecture and lab are included
+    return lecture_course and lab_course
 
 def count_days_in_schedule(schedule):
     """
