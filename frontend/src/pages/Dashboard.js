@@ -191,16 +191,11 @@ function Dashboard() {
         </ErrorMessage>
       )}
       
-      <ScheduleList>
-        {schedules.map(schedule => (
-          <ScheduleCard 
-            key={schedule.id}
-            schedule={schedule}
-            isFavorite={favorites.includes(schedule.id)}
-            onToggleFavorite={() => toggleFavorite(schedule)}
-          />
-        ))}
-      </ScheduleList>
+      <ScheduleList
+        schedules={schedules}
+        favorites={favorites}
+        onToggleFavorite={toggleFavorite}
+      />
       
       {lastUpdated && (
         <LastUpdated>
