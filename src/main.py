@@ -121,7 +121,7 @@ def main():
     print(f"{Fore.CYAN}NSU Course Scheduler starting...{Style.RESET_ALL}")
     print("Monitoring for course sections that meet your criteria:")
     print("- Classes start after 12 PM")
-    print("- Schedule spans only 4 days per week")
+    print("- Schedule spans only 5 days per week")
     print("- Classes occur only on ST (Sunday-Tuesday) and MW (Monday-Wednesday) slots")
     print("- CSE 332 lecture and lab must be in the same section")
     print("- CSE 327 must be section 1 or 7 with instructor \"NBM\"")

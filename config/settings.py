@@ -22,7 +22,7 @@ TARGET_COURSES = [
 
 # Filtering criteria
 MINIMUM_START_TIME = "12:00 PM"  # Only consider classes after this time
-MAX_DAYS_PER_WEEK = 4  # Maximum number of days in a valid schedule
+MAX_DAYS_PER_WEEK = 5  # Maximum number of days in a valid schedule
 VALID_DAY_PATTERNS = ["ST", "MW", "S", "M", "T", "W"]  # Valid day combinations
 
 # CSE 327 specific criteria

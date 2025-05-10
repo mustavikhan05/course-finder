@@ -171,7 +171,7 @@ def generate_schedule_recursive(course_codes, index, current_schedule, course_op
         days_count = count_days_in_schedule(schedule)
         has_valid_cse332 = has_same_section_cse332(schedule)
         
-        if days_count <= 4 and has_valid_cse332:
+        if days_count <= 5 and has_valid_cse332:
             # We have a valid partial schedule
             # Add a copy to avoid reference issues when backtracking
             partial_schedules.append(schedule.copy())
@@ -185,7 +185,7 @@ def generate_schedule_recursive(course_codes, index, current_schedule, course_op
         
         # Check total days constraint
         days_count = count_days_in_schedule(schedule)
-        if days_count <= 4:
+        if days_count <= 5:
             # Check if CSE 332 lecture and lab have same section
             if has_same_section_cse332(schedule):
                 valid_schedules.append(schedule)
@@ -200,7 +200,7 @@ def generate_schedule_recursive(course_codes, index, current_schedule, course_op
             debug_stats['days_constraint_failures'] += 1
             # Print details of the first few failures
             if debug_stats['days_constraint_failures'] <= 3:
-                print(f"Failed on days constraint: {days_count} days in schedule (> 4)")
+                print(f"Failed on days constraint: {days_count} days in schedule (> 5)")
                 all_days = set()
                 for course in schedule:
                     for day in course['days']:

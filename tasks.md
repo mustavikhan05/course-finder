@@ -5,7 +5,7 @@ This project creates a personal tool for monitoring available course sections at
 Goals: Find sections of specified courses that fit the following criteria:
 
 Classes start after 12 PM
-Schedule spans only 4 days per week
+Schedule spans only 5 days per week
 Lecture classes occur only on ST (Sunday-Tuesday) and MW (Monday-Wednesday) slots
 Lab classes (CSE332L, PHY108L, CHE101L) can be on Thursday (R) but not on Saturday (A)
 CSE 332 lecture and lab must be in the same section
