@@ -10,13 +10,14 @@ NSU_COURSE_URL = "https://rds2.northsouth.edu/index.php/common/showofferings"
 
 # Target courses to monitor
 TARGET_COURSES = [
-    "BIO 103",
-    "CSE 327",
-    "CSE 332",
-    "EEE 452",
-    "ENG 115",
-    "PHY108L",
-    "CHE101L"
+    "BIO103",
+    "CHE101L",
+    "CSE327",
+    "CSE332",
+    "CSE332L",
+    "EEE452",
+    "ENG115",
+    "PHY108L"
 ]
 
 # Filtering criteria
@@ -40,4 +41,9 @@ HIGHLIGHT_NEW_SCHEDULES = True
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 REQUEST_TIMEOUT = 10
 REQUEST_DELAY_MIN = 0.5  # Minimum delay between requests (seconds)
-REQUEST_DELAY_MAX = 1.5  # Maximum delay between requests (seconds) 
+REQUEST_DELAY_MAX = 1.5  # Maximum delay between requests (seconds)
+
+# Cache settings
+CACHE_ENABLED = True
+CACHE_FILE = "data/latest_courses.csv"
+CACHE_EXPIRY = 300  # Cache expiry in seconds (5 minutes) 

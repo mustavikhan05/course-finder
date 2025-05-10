@@ -11,20 +11,16 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import time
 import random
+import sys
+import os
 
-# URL will need to be updated with the actual NSU course offerings page
-NSU_COURSE_URL = "https://rds2.northsouth.edu/index.php/common/showofferings"
-
-# Target courses to filter for
-TARGET_COURSES = [
-    "BIO 103",
-    "CSE 327",
-    "CSE 332",
-    "EEE 452",
-    "ENG 115",
-    "PHY108L",
-    "CHE101L"
-]
+# Add the parent directory to the path so we can import from config
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from config.settings import (
+    NSU_COURSE_URL, TARGET_COURSES, 
+    USER_AGENT, REQUEST_TIMEOUT,
+    REQUEST_DELAY_MIN, REQUEST_DELAY_MAX
+)
 
 def fetch_course_data():
     """
@@ -49,7 +45,7 @@ def fetch_page():
         Exception: If there's an error fetching the page
     """
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'User-Agent': USER_AGENT,
         'Accept': 'text/html,application/xhtml+xml,application/xml',
         'Accept-Language': 'en-US,en;q=0.9',
         'Connection': 'keep-alive',
@@ -57,9 +53,9 @@ def fetch_page():
     
     try:
         # Add a small random delay to avoid overloading the server
-        time.sleep(random.uniform(0.5, 1.5))
+        time.sleep(random.uniform(REQUEST_DELAY_MIN, REQUEST_DELAY_MAX))
         
-        response = requests.get(NSU_COURSE_URL, headers=headers, timeout=10)
+        response = requests.get(NSU_COURSE_URL, headers=headers, timeout=REQUEST_TIMEOUT)
         
         if response.status_code != 200:
             raise Exception(f"Failed to fetch page: HTTP {response.status_code}")
@@ -81,31 +77,42 @@ def parse_html_to_dataframe(html_content):
     """
     soup = BeautifulSoup(html_content, 'html.parser')
     
-    # This will need to be updated based on actual HTML structure
-    # The following is a placeholder implementation
-    table = soup.find('table', {'class': 'offerings-table'})  # Update with actual table class
+    # Find the main course table
+    table = soup.find('table', {'id': 'offeredCourseTbl'})
     
     if not table:
         raise Exception("Could not find course offerings table in the HTML")
     
     courses = []
-    rows = table.find_all('tr')[1:]  # Skip header row
+    # Get all rows from tbody (skipping header)
+    rows = table.find('tbody').find_all('tr')
     
     for row in rows:
         cols = row.find_all('td')
-        if len(cols) < 7:
+        if len(cols) < 6:
             continue
         
+        # Based on screenshots, the columns are:
+        # 0: Row number (not needed)
+        # 1: Course code
+        # 2: Section
+        # 3: Faculty/Instructor
+        # 4: Time
+        # 5: Room
+        # 6: Seats Available
+        
         course_data = {
-            'course_code': cols[0].text.strip(),
-            'section': cols[1].text.strip(),
-            'title': cols[2].text.strip(),
-            'credit': cols[3].text.strip(),
+            'course_code': cols[1].text.strip(),
+            'section': cols[2].text.strip(),
+            'instructor': cols[3].text.strip(),
             'day_time': cols[4].text.strip(),
             'room': cols[5].text.strip(),
-            'instructor': cols[6].text.strip(),
-            'seats': cols[7].text.strip() if len(cols) > 7 else "N/A"
+            'seats': cols[6].text.strip() if len(cols) > 6 else "0"
         }
+        
+        # Add title and credit fields (will need to be populated separately or inferred)
+        course_data['title'] = ""  # Will need to be added later
+        course_data['credit'] = ""  # Will need to be added later
         
         # Add parsed day and time fields
         day_time = course_data['day_time']
@@ -114,29 +121,33 @@ def parse_html_to_dataframe(html_content):
         
         courses.append(course_data)
     
-    return pd.DataFrame(courses)
+    df = pd.DataFrame(courses)
+    
+    # Clean and process the data
+    df = clean_data(df)
+    
+    return df
 
 def extract_days(day_time_str):
     """
     Extract the days from a day_time string.
     
     Args:
-        day_time_str (str): String containing day and time information
+        day_time_str (str): String containing day and time information (e.g., "ST 01:00 PM - 02:30 PM")
     
     Returns:
-        str: Days part of the string (e.g., "ST", "MW", "SMW")
+        str: Days part of the string (e.g., "ST", "MW", "RA")
     """
-    # This function will need to be adjusted based on actual data format
-    # Example format might be "ST 1:00 PM - 2:30 PM"
     if not day_time_str or pd.isna(day_time_str):
         return ""
     
-    # Assuming days are at the start of the string before any digits
+    # From screenshots, days come before the time
+    # Extract all letters at the beginning of the string
     days = ""
     for char in day_time_str:
-        if char.isalpha() and char in "SMTWRF":
+        if char.isalpha():
             days += char
-        elif char.isdigit() or char == ':':
+        elif char.isdigit() or char.isspace():
             break
     
     return days.strip()
@@ -146,24 +157,81 @@ def extract_times(day_time_str):
     Extract start and end times from day_time string.
     
     Args:
-        day_time_str (str): String containing day and time information
+        day_time_str (str): String containing day and time information (e.g., "ST 01:00 PM - 02:30 PM")
     
     Returns:
         tuple: (start_time, end_time) as strings
     """
-    # This function will need to be adjusted based on actual data format
     if not day_time_str or pd.isna(day_time_str):
         return "", ""
     
-    # Example: "ST 1:00 PM - 2:30 PM"
-    # Remove days part and extract time range
-    time_part = ''.join([c for c in day_time_str if c.isdigit() or c in ":APM -"])
-    
     try:
-        start_time, end_time = time_part.split('-')
-        return start_time.strip(), end_time.strip()
-    except ValueError:
+        # From the screenshots, format is like "ST 01:00 PM - 02:30 PM"
+        # Remove the day codes at the beginning
+        time_part = day_time_str
+        for i, char in enumerate(day_time_str):
+            if char.isdigit():
+                time_part = day_time_str[i:].strip()
+                break
+        
+        # Split by the " - " separator
+        if " - " in time_part:
+            start_time, end_time = time_part.split(" - ")
+            return start_time.strip(), end_time.strip()
+        else:
+            return time_part.strip(), ""
+    except Exception:
         return "", ""
+
+def clean_data(df):
+    """
+    Clean and standardize the DataFrame.
+    
+    Args:
+        df (pandas.DataFrame): Raw DataFrame
+    
+    Returns:
+        pandas.DataFrame: Cleaned DataFrame
+    """
+    # Convert section to string
+    df['section'] = df['section'].astype(str)
+    
+    # Convert seats to integer
+    df['seats'] = pd.to_numeric(df['seats'], errors='coerce').fillna(0).astype(int)
+    
+    # Handle special cases for course codes
+    # For example, CSE332 and CSE332L may have different formats
+    
+    # Add credit information based on course code
+    # This could be loaded from a separate mapping file or hardcoded
+    credit_map = {
+        'BIO103': 3,
+        'CHE101L': 1,
+        'CSE327': 3,
+        'CSE332': 3,
+        'CSE332L': 0,
+        'EEE452': 3,
+        'ENG115': 3,
+        'PHY108L': 1
+    }
+    
+    # Add title information
+    title_map = {
+        'BIO103': 'Biology',
+        'CHE101L': 'Chemistry Lab',
+        'CSE327': 'Software Engineering',
+        'CSE332': 'Computer Architecture',
+        'CSE332L': 'Computer Architecture Lab',
+        'EEE452': 'Digital Signal Processing',
+        'ENG115': 'English Writing',
+        'PHY108L': 'Physics Lab'
+    }
+    
+    # Apply credit and title mappings
+    df['credit'] = df['course_code'].map(lambda x: credit_map.get(x, 0))
+    df['title'] = df['course_code'].map(lambda x: title_map.get(x, "Unknown"))
+    
+    return df
 
 def filter_target_courses(df):
     """
@@ -175,15 +243,67 @@ def filter_target_courses(df):
     Returns:
         pandas.DataFrame: Filtered DataFrame with only target courses
     """
-    # Check if course_code starts with any of the target courses
-    mask = df['course_code'].apply(lambda x: any(x.startswith(course) for course in TARGET_COURSES))
+    # Check if course_code is in the target courses list
+    mask = df['course_code'].isin(TARGET_COURSES)
     return df[mask]
+
+def save_course_data(df, filename='data/latest_courses.csv'):
+    """
+    Save course data to a CSV file for caching/later use.
+    
+    Args:
+        df (pandas.DataFrame): DataFrame to save
+        filename (str): Path to save the file
+    """
+    # Create directory if it doesn't exist
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    
+    # Save to CSV
+    df.to_csv(filename, index=False)
+    print(f"Course data saved to {filename}")
+
+def load_cached_course_data(filename='data/latest_courses.csv'):
+    """
+    Load course data from a cached CSV file.
+    
+    Args:
+        filename (str): Path to the cached file
+    
+    Returns:
+        pandas.DataFrame: DataFrame from cache, or None if not available
+    """
+    try:
+        if os.path.exists(filename):
+            df = pd.read_csv(filename)
+            print(f"Loaded cached data from {filename}")
+            return df
+        return None
+    except Exception as e:
+        print(f"Error loading cached data: {str(e)}")
+        return None
 
 if __name__ == "__main__":
     # For testing
     try:
+        print("Fetching course data...")
         df = fetch_course_data()
         print(f"Successfully fetched {len(df)} course sections")
+        print("\nSample data:")
         print(df.head())
+        
+        # Save for future use
+        save_course_data(df)
+        
+        # Show unique values in day_time column
+        print("\nUnique day/time patterns:")
+        print(df['day_time'].unique())
+        
+        # Show day/time parsing results
+        print("\nDay/time parsing examples:")
+        for day_time in df['day_time'].unique()[:5]:  # Show first 5 examples
+            days = extract_days(day_time)
+            start_time, end_time = extract_times(day_time)
+            print(f"Original: '{day_time}' → Days: '{days}', Start: '{start_time}', End: '{end_time}'")
+        
     except Exception as e:
         print(f"Error: {str(e)}") 
