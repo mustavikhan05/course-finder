@@ -136,6 +136,11 @@ const Select = styled.select`
   background-position: right 12px center;
   background-size: 10px;
   padding-right: 30px; // Make space for arrow
+  cursor: pointer; // Indicate it's clickable
+  
+  &:hover {
+    border-color: ${colors.primary};
+  }
   
   @media (max-width: 480px) {
     height: 48px; // Even taller on very small screens
@@ -145,32 +150,39 @@ const Select = styled.select`
 const CheckboxContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 10px;
   margin-top: 10px;
+  
+  @media (max-width: 480px) {
+    gap: 8px;
+  }
 `;
 
-const CheckboxLabel = styled.label`
+const DayPatternLabel = styled.label`
   display: flex;
   align-items: center;
   cursor: pointer;
   user-select: none;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: ${colors.text};
-  padding: 8px 12px;
+  background-color: ${props => props.checked ? colors.primary + '15' : 'transparent'};
+  border: 1px solid ${props => props.checked ? colors.primary : colors.border};
   border-radius: 8px;
+  padding: 10px 15px;
   transition: all 0.2s ease;
   
   &:hover {
-    background-color: ${colors.background};
+    background-color: ${props => props.checked ? colors.primary + '25' : colors.background};
+    border-color: ${props => props.checked ? colors.primary : colors.primary + '50'};
   }
   
   @media (max-width: 480px) {
-    width: 100%; // Full width on very small screens
-    padding: 12px; // Larger touch target
+    width: 100%; // Full width on small screens
+    padding: 12px 15px;
   }
 `;
 
-// Replace old checkbox with toggle switch
+// Replace old toggle switch with improved version (no box-shadow on focus)
 const ToggleSwitch = styled.div`
   position: relative;
   width: 48px;
@@ -191,8 +203,9 @@ const ToggleSwitch = styled.div`
       transform: translateX(24px);
     }
     
-    &:focus + span {
-      box-shadow: 0 0 0 2px ${colors.inputFocusShadow};
+    &:focus-visible + span {
+      outline: 2px solid ${colors.primaryDark};
+      outline-offset: 2px;
     }
   }
   
@@ -204,7 +217,7 @@ const ToggleSwitch = styled.div`
     right: 0;
     bottom: 0;
     background-color: ${colors.disabledBg};
-    transition: .3s ease;
+    transition: background-color 0.3s ease;
     border-radius: 34px;
     
     &:before {
@@ -215,7 +228,7 @@ const ToggleSwitch = styled.div`
       left: 2px;
       bottom: 2px;
       background-color: white;
-      transition: .3s ease;
+      transition: transform 0.3s ease;
       border-radius: 50%;
     }
   }
@@ -235,9 +248,8 @@ const ToggleSwitch = styled.div`
   }
 `;
 
-// Replace old Checkbox component with modern toggle
 const DayPatternCheckbox = ({ id, checked, onChange, children }) => (
-  <CheckboxLabel htmlFor={id}>
+  <DayPatternLabel htmlFor={id} checked={checked}>
     <ToggleSwitch>
       <input
         id={id}
@@ -248,7 +260,7 @@ const DayPatternCheckbox = ({ id, checked, onChange, children }) => (
       <span></span>
     </ToggleSwitch>
     {children}
-  </CheckboxLabel>
+  </DayPatternLabel>
 );
 
 const CoursesTagInput = styled.div`
@@ -261,6 +273,7 @@ const CoursesTagInput = styled.div`
   background-color: ${colors.surface};
   min-height: 42px; // Adjusted min-height
   align-items: center;
+  cursor: text; // Add cursor: text to indicate it's clickable
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   
   &:focus-within {
@@ -418,6 +431,21 @@ const DropdownList = styled.ul`
   box-shadow: 0 5px 10px rgba(0,0,0,0.1);
   z-index: 1000; // Ensure it's above other elements
   list-style: none;
+  
+  /* Custom scrollbar for better UX */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: ${colors.lightGray || '#f1f1f1'};
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: ${colors.mediumGray || '#ddd'};
+    border-radius: 3px;
+  }
 `;
 
 const DropdownItem = styled.li`
@@ -507,6 +535,156 @@ const EveningClassesToggle = styled(ToggleSwitch)`
   // Any special styling for evening classes toggle
 `;
 
+// Create a styled label for the evening classes toggle
+const EveningClassesLabel = styled(DayPatternLabel)`
+  background-color: ${props => !props.checked ? colors.primary + '15' : 'transparent'};
+  border: 1px solid ${props => !props.checked ? colors.primary : colors.border};
+  
+  &:hover {
+    background-color: ${props => !props.checked ? colors.primary + '25' : colors.background};
+    border-color: ${props => !props.checked ? colors.primary : colors.primary + '50'};
+  }
+`;
+
+// Add a custom styled time selector component to replace the default dropdown
+const TimeSelector = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const TimeDisplay = styled.div`
+  ${inputStyles}
+  height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding-right: 30px; // Make room for the arrow
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23${colors.textSecondary.substring(1)}%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E');
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 10px;
+  
+  &:hover {
+    border-color: ${colors.primary};
+  }
+  
+  @media (max-width: 480px) {
+    height: 48px;
+  }
+`;
+
+const TimeDropdown = styled.div`
+  position: absolute;
+  width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: ${colors.surface};
+  border: 1px solid ${colors.border};
+  border-radius: 6px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  z-index: 1000;
+  margin-top: 4px;
+  
+  /* Custom scrollbar for better UX */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: ${colors.lightGray || '#f1f1f1'};
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: ${colors.mediumGray || '#ddd'};
+    border-radius: 3px;
+  }
+`;
+
+const TimeOption = styled.div`
+  padding: 12px 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: ${colors.primary};
+    color: white;
+  }
+  
+  ${props => props.selected && `
+    background-color: ${colors.primary};
+    color: white;
+    font-weight: 500;
+  `}
+  
+  &:not(:last-child) {
+    border-bottom: 1px solid ${colors.border};
+  }
+`;
+
+// A custom time selector component
+const CustomTimeSelector = ({ value, onChange, options }) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDropdown]);
+  
+  // Toggle dropdown
+  const toggleDropdown = () => {
+    // Add a small delay when opening to prevent immediate toggle
+    if (!showDropdown) {
+      setTimeout(() => {
+        setShowDropdown(true);
+      }, 50);
+    } else {
+      setShowDropdown(false);
+    }
+  };
+  
+  // Handle option selection
+  const handleSelect = (option) => {
+    onChange(option);
+    setShowDropdown(false);
+  };
+  
+  return (
+    <TimeSelector ref={dropdownRef}>
+      <TimeDisplay onClick={toggleDropdown}>
+        {value}
+      </TimeDisplay>
+      
+      {showDropdown && (
+        <TimeDropdown>
+          {options.map(option => (
+            <TimeOption 
+              key={option}
+              selected={option === value}
+              onClick={() => handleSelect(option)}
+            >
+              {option}
+            </TimeOption>
+          ))}
+        </TimeDropdown>
+      )}
+    </TimeSelector>
+  );
+};
+
 function CourseConstraintsForm({ onSubmit, isLoading }) {
   // Fetch available courses from API
   const {
@@ -538,6 +716,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
   const [showCourseDropdown, setShowCourseDropdown] = useState(false);
   const [filteredCourses, setFilteredCourses] = useState([]);
   const courseDropdownRef = useRef(null);
+  const courseInputRef = useRef(null);
   
   // Get available courses from API data or use fallback
   const availableCourses = React.useMemo(() => {
@@ -750,6 +929,21 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
     }
   };
 
+  // Function to focus the input when clicking anywhere in the tag container
+  const handleContainerClick = () => {
+    if (courseInputRef.current) {
+      courseInputRef.current.focus();
+    }
+  };
+  
+  // Update the dropdown showing logic to fix timing issues
+  const handleDropdownShow = () => {
+    // Small timeout to prevent immediate re-opening when closing another dropdown
+    setTimeout(() => {
+      setShowCourseDropdown(true);
+    }, 50);
+  };
+
   return (
     <FormContainer onSubmit={handleSubmit}>
       <FormTitle>Course Schedule Generator</FormTitle>
@@ -767,7 +961,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
       <FormSectionTitle>Course Selection</FormSectionTitle>
       <FormGroup>
         <Label htmlFor="required_courses">Select Your Courses:</Label>
-        <CoursesTagInput>
+        <CoursesTagInput onClick={handleContainerClick}>
           {constraints.required_courses.map(course => (
             <CourseTag key={course} course={course}>
               {course}
@@ -782,11 +976,12 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
           ))}
           <div ref={courseDropdownRef} style={{ flex: 1, position: 'relative' }}>
             <CourseInput
+              ref={courseInputRef}
               id="course_input"
               value={courseInput}
               onChange={handleCourseInputChange}
               onKeyDown={handleCourseInputKeyDown}
-              onFocus={() => setShowCourseDropdown(true)}
+              onFocus={handleDropdownShow}
               placeholder="Type course code (e.g., CSE327)..."
               autoComplete="off"
             />
@@ -813,27 +1008,21 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
       <FormGrid>
         <FormGroup>
           <Label htmlFor="start_time">Earliest Class Start Time:</Label>
-          <Select
-            id="start_time"
+          <CustomTimeSelector
             value={constraints.start_time_constraint}
-            onChange={(e) => handleInputChange('start_time_constraint', e.target.value)}
-          >
-            {TIME_OPTIONS.map(time => (
-              <option key={time} value={time}>{time}</option>
-            ))}
-          </Select>
+            onChange={(value) => handleInputChange('start_time_constraint', value)}
+            options={TIME_OPTIONS}
+          />
           <HelperText>Classes will not start before this time</HelperText>
         </FormGroup>
         
         <FormGroup>
           <Label>Maximum Days per Week:</Label>
-          <Select
-            value={constraints.max_days}
-            onChange={(e) => handleInputChange('max_days', parseInt(e.target.value))}
-          >
-            <option value="4">4 Days</option>
-            <option value="5">5 Days</option>
-          </Select>
+          <CustomTimeSelector
+            value={`${constraints.max_days} Days`}
+            onChange={(value) => handleInputChange('max_days', parseInt(value.split(' ')[0]))}
+            options={["4 Days", "5 Days"]}
+          />
           <HelperText>Maximum number of different days you want to have classes</HelperText>
         </FormGroup>
       </FormGrid>
@@ -857,7 +1046,10 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
       
       <FormGroup>
         <Label>Evening Classes:</Label>
-        <CheckboxLabel htmlFor="evening-classes">
+        <EveningClassesLabel 
+          htmlFor="evening-classes" 
+          checked={constraints.exclude_evening_classes}
+        >
           <EveningClassesToggle>
             <input
               id="evening-classes"
@@ -868,7 +1060,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
             <span></span>
           </EveningClassesToggle>
           Include classes starting at or after 6:00 PM
-        </CheckboxLabel>
+        </EveningClassesLabel>
       </FormGroup>
       
       <FormGroup>
