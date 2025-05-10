@@ -2,70 +2,91 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
 const Panel = styled.div`
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 15px;
+  background-color: #f5f8fa;
+  border-radius: 6px;
+  overflow: hidden;
 `;
 
-const PanelTitle = styled.h3`
-  margin-top: 0;
-  margin-bottom: 15px;
-  color: #333;
-  font-size: 1.2rem;
+const PanelHeader = styled.div`
+  background-color: #4a90e2;
+  color: white;
+  padding: 12px 15px;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const StatusIndicator = styled.span`
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: ${props => props.online ? '#4caf50' : '#f44336'};
+  margin-right: 6px;
+`;
+
+const PanelBody = styled.div`
+  padding: 15px;
 `;
 
 const StatusItem = styled.div`
   margin-bottom: 12px;
+  &:last-child {
+    margin-bottom: 0;
+  }
 `;
 
-const Label = styled.div`
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 4px;
+const StatusLabel = styled.div`
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 3px;
 `;
 
-const Value = styled.div`
-  font-size: 1.1rem;
+const StatusValue = styled.div`
+  font-size: 14px;
   color: #333;
-  font-weight: ${props => props.bold ? '600' : 'normal'};
+  font-weight: 500;
 `;
 
 const RefreshCountdown = styled.div`
-  font-size: 0.85rem;
+  font-size: 12px;
   color: #888;
   margin-top: 15px;
   text-align: center;
+  font-style: italic;
 `;
 
-const Badge = styled.span`
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  background-color: ${props => props.showingEveningClasses ? '#4a90e2' : '#e67e22'};
-  color: white;
-  margin-left: 8px;
+const ConstraintsList = styled.ul`
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: #555;
 `;
 
-const formatTimestamp = (timestamp) => {
-  if (!timestamp) return 'Never';
-  
-  const date = new Date(timestamp);
-  return date.toLocaleTimeString([], { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    second: '2-digit'
-  });
-};
+const ConstraintItem = styled.li`
+  margin-bottom: 4px;
+`;
 
-function StatusPanel({ lastUpdated, totalSchedules, stats, isLoading, showingEveningClasses }) {
+function StatusPanel({ 
+  lastUpdated, 
+  totalSchedules, 
+  stats, 
+  isLoading, 
+  showingEveningClasses,
+  mode = 'default'
+}) {
   const [countdown, setCountdown] = useState(30);
   
-  // Update countdown timer
   useEffect(() => {
-    if (isLoading) return;
+    // Reset countdown when data is updated
+    if (lastUpdated) {
+      setCountdown(30);
+    }
     
-    setCountdown(30);
+    // Only start countdown if in default mode
+    if (mode !== 'default') return;
+    
     const timer = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) return 30;
@@ -74,55 +95,112 @@ function StatusPanel({ lastUpdated, totalSchedules, stats, isLoading, showingEve
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [lastUpdated, isLoading]);
+  }, [lastUpdated, mode]);
   
-  // Get the appropriate courses after filtering count
-  const getFilteredCoursesCount = () => {
-    if (!stats.courses_after_filtering) return 0;
+  // Format timestamp to readable format
+  const formatTime = (timestamp) => {
+    if (!timestamp) return 'Never';
     
-    // Check if courses_after_filtering is an object with both types
-    if (typeof stats.courses_after_filtering === 'object') {
-      return showingEveningClasses 
-        ? stats.courses_after_filtering.with_evening || 0
-        : stats.courses_after_filtering.without_evening || 0; 
-    }
-    
-    // Fallback to direct value if it's not structured
-    return stats.courses_after_filtering;
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   };
   
   return (
     <Panel>
-      <PanelTitle>
-        System Status
-        <Badge showingEveningClasses={showingEveningClasses}>
-          {showingEveningClasses ? 'With Evening' : 'No Evening'}
-        </Badge>
-      </PanelTitle>
-      
-      <StatusItem>
-        <Label>Last Updated</Label>
-        <Value>{formatTimestamp(lastUpdated)}</Value>
-      </StatusItem>
-      
-      <StatusItem>
-        <Label>Total Schedules Found</Label>
-        <Value bold>{totalSchedules}</Value>
-      </StatusItem>
-      
-      <StatusItem>
-        <Label>Courses Fetched</Label>
-        <Value>{stats.courses_fetched || 0}</Value>
-      </StatusItem>
-      
-      <StatusItem>
-        <Label>Courses After Filtering</Label>
-        <Value>{getFilteredCoursesCount()}</Value>
-      </StatusItem>
-      
-      <RefreshCountdown>
-        {isLoading ? 'Refreshing...' : `Refreshing in ${countdown} seconds`}
-      </RefreshCountdown>
+      <PanelHeader>
+        <span>System Status</span>
+        <StatusIndicator online={!isLoading} />
+      </PanelHeader>
+      <PanelBody>
+        <StatusItem>
+          <StatusLabel>Mode</StatusLabel>
+          <StatusValue>{mode === 'default' ? 'Default Courses' : 'Custom Constraints'}</StatusValue>
+        </StatusItem>
+        
+        {mode === 'default' && (
+          <StatusItem>
+            <StatusLabel>Last Updated</StatusLabel>
+            <StatusValue>{formatTime(lastUpdated)}</StatusValue>
+          </StatusItem>
+        )}
+        
+        <StatusItem>
+          <StatusLabel>Valid Schedules Found</StatusLabel>
+          <StatusValue>
+            {isLoading ? 'Calculating...' : totalSchedules.toLocaleString()}
+          </StatusValue>
+        </StatusItem>
+        
+        {mode === 'default' && stats.courses_fetched && (
+          <>
+            <StatusItem>
+              <StatusLabel>Total Course Sections</StatusLabel>
+              <StatusValue>{stats.courses_fetched.toLocaleString()}</StatusValue>
+            </StatusItem>
+            
+            <StatusItem>
+              <StatusLabel>Filtered Sections</StatusLabel>
+              <StatusValue>
+                {stats.courses_after_filtering && (
+                  showingEveningClasses 
+                    ? stats.courses_after_filtering.with_evening.toLocaleString()
+                    : stats.courses_after_filtering.without_evening.toLocaleString()
+                )}
+              </StatusValue>
+            </StatusItem>
+          </>
+        )}
+        
+        {mode === 'custom' && stats.courses_fetched && (
+          <>
+            <StatusItem>
+              <StatusLabel>Total Course Sections</StatusLabel>
+              <StatusValue>{stats.courses_fetched.toLocaleString()}</StatusValue>
+            </StatusItem>
+            
+            <StatusItem>
+              <StatusLabel>Filtered Sections</StatusLabel>
+              <StatusValue>
+                {stats.courses_after_filtering && stats.courses_after_filtering.toLocaleString()}
+              </StatusValue>
+            </StatusItem>
+            
+            {stats.constraints && (
+              <StatusItem>
+                <StatusLabel>Applied Constraints</StatusLabel>
+                <ConstraintsList>
+                  <ConstraintItem>
+                    {stats.constraints.required_courses.length} required courses
+                  </ConstraintItem>
+                  <ConstraintItem>
+                    Start time ≥ {stats.constraints.start_time_constraint}
+                  </ConstraintItem>
+                  <ConstraintItem>
+                    Day patterns: {stats.constraints.day_pattern.join(', ')}
+                  </ConstraintItem>
+                  <ConstraintItem>
+                    Max {stats.constraints.max_days} days per week
+                  </ConstraintItem>
+                  <ConstraintItem>
+                    {stats.constraints.exclude_evening_classes ? 'Excluding' : 'Including'} evening classes
+                  </ConstraintItem>
+                  {Object.keys(stats.constraints.instructor_preferences).length > 0 && (
+                    <ConstraintItem>
+                      {Object.keys(stats.constraints.instructor_preferences).length} instructor preferences
+                    </ConstraintItem>
+                  )}
+                </ConstraintsList>
+              </StatusItem>
+            )}
+          </>
+        )}
+        
+        {mode === 'default' && !isLoading && (
+          <RefreshCountdown>
+            Refreshing in {countdown} seconds...
+          </RefreshCountdown>
+        )}
+      </PanelBody>
     </Panel>
   );
 }

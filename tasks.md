@@ -300,7 +300,7 @@ The goal is to deploy the current version first and then add user input function
 
 ### 10.2 Frontend UI Components (In Progress)
 
-- [ ] Create a CourseConstraintsForm component:
+- [x] Create a CourseConstraintsForm component:
   - Input fields for required courses
   - Dropdowns for time restrictions
   - Checkboxes for day pattern preferences
@@ -308,18 +308,18 @@ The goal is to deploy the current version first and then add user input function
   - Toggle for evening classes
   - Slider for maximum days per week
 
-- [ ] Implement form validation:
+- [x] Implement form validation:
   - Ensure required fields are filled
   - Validate course codes against a known list
   - Show helpful error messages
 
-- [ ] Update Dashboard component:
+- [x] Update Dashboard component:
   - Add the constraints form at the top
   - Add a "Generate Schedules" button
   - Show loading state during API calls
   - Display error messages if generation fails
 
-- [ ] Implement state management for user constraints:
+- [x] Implement state management for user constraints:
   - Save form values to localStorage
   - Restore values when the page loads
   - Reset button to clear all constraints

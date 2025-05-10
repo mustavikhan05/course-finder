@@ -25,6 +25,21 @@ export const fetchSchedules = async () => {
 };
 
 /**
+ * Generate schedules with custom constraints
+ * @param {Object} constraints - Custom constraints for schedule generation
+ * @returns {Promise} Promise that resolves with the generated schedule data
+ */
+export const generateSchedules = async (constraints) => {
+  try {
+    const response = await api.post('/schedules/generate', constraints);
+    return response.data;
+  } catch (error) {
+    console.error('Error generating schedules:', error);
+    throw new Error(error.response?.data?.error || 'Failed to generate schedules. Please try again later.');
+  }
+};
+
+/**
  * Fetch system status from the API
  * @returns {Promise} Promise that resolves with the status data
  */
