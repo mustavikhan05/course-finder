@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
+import { useQuery } from '@tanstack/react-query';
+import { fetchAvailableCourses } from '../utils/api';
 
 const FormContainer = styled.form`
   background-color: #f9f9f9;
@@ -92,6 +94,33 @@ const CoursesTagInput = styled.div`
     border-color: #4a90e2;
     box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
   }
+`;
+
+// Get the department code from a course code
+const getDepartment = (course) => {
+  const match = course.match(/^([A-Z]{3})/);
+  return match ? match[1] : '';
+};
+
+// Course badge with department color
+const CourseBadge = styled.span`
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  background-color: ${props => {
+    // Choose color based on course department
+    const dept = getDepartment(props.course);
+    if (dept === 'CSE') return '#4a90e2'; // Blue
+    if (dept === 'EEE') return '#50b83c'; // Green
+    if (dept === 'MAT') return '#8c4bff'; // Purple
+    if (dept === 'BIO') return '#f08a24'; // Orange
+    if (dept === 'PHY') return '#d8315b'; // Red
+    if (dept === 'CHE') return '#639'; // Indigo
+    if (dept === 'ENG') return '#4b8e8d'; // Teal
+    return '#8c8c8c'; // Gray for others
+  }};
 `;
 
 const CourseTag = styled.div`
@@ -210,26 +239,7 @@ const ErrorText = styled.div`
   margin-top: 4px;
 `;
 
-// Autocomplete components
-const AutocompleteContainer = styled.div`
-  position: relative;
-  width: 100%;
-`;
-
-const AutocompleteInput = styled.input`
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  
-  &:focus {
-    outline: none;
-    border-color: #4a90e2;
-    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
-  }
-`;
-
+// Dropdown components
 const DropdownList = styled.ul`
   position: absolute;
   width: 100%;
@@ -261,33 +271,6 @@ const DropdownItem = styled.li`
   }
 `;
 
-// Get the department code from a course code
-const getDepartment = (course) => {
-  const match = course.match(/^([A-Z]{3})/);
-  return match ? match[1] : '';
-};
-
-// Course badge with department color
-const CourseBadge = styled.span`
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 12px;
-  font-weight: bold;
-  color: white;
-  background-color: ${props => {
-    // Choose color based on course department
-    const dept = getDepartment(props.course);
-    if (dept === 'CSE') return '#4a90e2'; // Blue
-    if (dept === 'EEE') return '#50b83c'; // Green
-    if (dept === 'MAT') return '#8c4bff'; // Purple
-    if (dept === 'BIO') return '#f08a24'; // Orange
-    if (dept === 'PHY') return '#d8315b'; // Red
-    if (dept === 'CHE') return '#639'; // Indigo
-    if (dept === 'ENG') return '#4b8e8d'; // Teal
-    return '#8c8c8c'; // Gray for others
-  }};
-`;
-
 const InstructorRowContainer = styled.div`
   display: flex;
   align-items: center;
@@ -306,6 +289,23 @@ const InstructorInputContainer = styled.div`
   position: relative;
 `;
 
+const LoadingIndicator = styled.div`
+  text-align: center;
+  padding: 15px;
+  color: #666;
+  font-style: italic;
+`;
+
+const ErrorIndicator = styled.div`
+  padding: 10px;
+  margin-bottom: 15px;
+  color: #c00;
+  background-color: #fee;
+  border-radius: 4px;
+  border: 1px solid #fcc;
+`;
+
+// Default constraints
 const DEFAULT_CONSTRAINTS = {
   required_courses: ["BIO103", "CSE327", "CSE332", "EEE452", "ENG115", "CHE101L", "PHY108L"],
   start_time_constraint: "11:00 AM",
@@ -315,189 +315,55 @@ const DEFAULT_CONSTRAINTS = {
   instructor_preferences: {}
 };
 
+// Time options for the dropdown
 const TIME_OPTIONS = [
   "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
   "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"
 ];
 
+// Day pattern options
 const DAY_PATTERNS = [
   { value: "ST", label: "Sunday-Tuesday (ST)" },
   { value: "MW", label: "Monday-Wednesday (MW)" },
   { value: "RA", label: "Thursday-Saturday (RA)" }
 ];
 
-const DEFAULT_COURSE_LIST = [
-  // Core courses mentioned in constraints
-  "BIO103", "CSE327", "CSE332", "CSE332L", "EEE452", "ENG115", "CHE101L", "PHY108L",
-  
-  // Common CSE courses
-  "CSE115", "CSE115L", "CSE173", "CSE215", "CSE215L", "CSE225", "CSE225L", "CSE231", 
-  "CSE231L", "CSE299", "CSE299L", "CSE323", "CSE331", "CSE331L", "CSE338", "CSE373", 
-  "CSE411", "CSE425", "CSE434", "CSE440", "CSE445", "CSE465", "CSE473", "CSE491",
-  
-  // Common EEE courses
-  "EEE111", "EEE111L", "EEE141", "EEE142", "EEE154", "EEE201", "EEE203", "EEE205", 
-  "EEE209", "EEE221", "EEE223", "EEE301", "EEE303", "EEE305", "EEE309", "EEE312", 
-  "EEE321", "EEE405", "EEE409", "EEE412", "EEE415", "EEE419", "EEE421", "EEE451",
-  
-  // MAT courses
-  "MAT116", "MAT120", "MAT125", "MAT130", "MAT250", "MAT350", "MAT361", "MAT370",
-  
-  // PHY courses
-  "PHY107", "PHY107L", "PHY108", "PHY109", "PHY209", "PHY499",
-
-  // BIO courses
-  "BIO103L", "BIO104", "BIO104L", "BIO210", "BIO220", "BIO320", "BIO330",
-  
-  // CHE courses
-  "CHE101", "CHE201", "CHE210",
-  
-  // Other common courses
-  "ENG101", "ENG102", "ENG103", "ENG111", "ENV101", "ENV107"
+// Fallback courses in case API fails
+const FALLBACK_COURSES = [
+  "BIO103", "CSE327", "CSE332", "EEE452", "ENG115", "CHE101L", "PHY108L"
 ];
 
-// Create a mapping of courses to their likely instructors
-// In a real implementation, this would be fetched from the API or a database
-const COURSE_INSTRUCTOR_MAP = {
-  "CSE327": ["NBM", "ARF", "TAN", "MZI"],
-  "CSE332": ["MAQM", "MIB", "FAR", "TBA"],
-  "CSE115": ["AKO", "RHK", "JBR", "TBA"],
-  "CSE215": ["MKR", "NZM", "TBA"],
-  "EEE452": ["SKB", "NMF", "TBA"],
-  "ENG115": ["ShC", "TBA"],
-  "BIO103": ["SUBK", "BAS", "TBA"],
-  "PHY108L": ["HrR", "TBA"],
-  "CHE101L": ["ADP", "TBA"]
-};
+// Fallback instructors
+const FALLBACK_INSTRUCTORS = ["TBA", "NBM", "ARF"];
 
-// Default instructors to show when no mapping exists for a course
-const DEFAULT_INSTRUCTORS = ["TBA", "NBM", "ARF", "ADP", "HrR", "ShC", "TAN", "MZI", "RAK", "SRH", "AHN", "MIB", "AKO"];
-
-// Function to get instructor suggestions for a specific course
-function getInstructorsForCourse(course) {
-  // If we have specific instructors for this course, return them
-  if (COURSE_INSTRUCTOR_MAP[course]) {
-    return COURSE_INSTRUCTOR_MAP[course];
-  }
-  
-  // Otherwise return default instructors
-  return DEFAULT_INSTRUCTORS;
-}
-
-function AutocompleteDropdown({ 
-  options, 
-  value, 
-  onChange, 
-  placeholder, 
-  filterPredicate = (option, input) => option.includes(input.toUpperCase())
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState(value || '');
-  const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const [filteredOptions, setFilteredOptions] = useState([]);
-  const containerRef = useRef(null);
-  
-  // Update filtered options whenever input changes
-  useEffect(() => {
-    if (inputValue.trim() === '') {
-      setFilteredOptions(options.slice(0, 10)); // Show first 10 when empty
-    } else {
-      const filtered = options
-        .filter(option => filterPredicate(option, inputValue))
-        .slice(0, 10); // Limit to 10 results
-      setFilteredOptions(filtered);
-    }
-    setHighlightedIndex(0);
-  }, [inputValue, options, filterPredicate]);
-  
-  // Handle click outside to close dropdown
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-  
-  // Handle keyboard navigation
-  const handleKeyDown = (e) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setHighlightedIndex(prev => 
-        (prev < filteredOptions.length - 1) ? prev + 1 : prev
-      );
-      setIsOpen(true);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setHighlightedIndex(prev => (prev > 0) ? prev - 1 : 0);
-    } else if (e.key === 'Enter' && isOpen) {
-      e.preventDefault();
-      if (filteredOptions[highlightedIndex]) {
-        handleSelect(filteredOptions[highlightedIndex]);
-      }
-    } else if (e.key === 'Escape') {
-      setIsOpen(false);
-    }
-  };
-  
-  const handleInputChange = (e) => {
-    setInputValue(e.target.value);
-    setIsOpen(true);
-  };
-  
-  const handleSelect = (option) => {
-    setInputValue(option);
-    onChange(option);
-    setIsOpen(false);
-  };
-  
-  return (
-    <AutocompleteContainer ref={containerRef}>
-      <AutocompleteInput
-        type="text"
-        value={inputValue}
-        onChange={handleInputChange}
-        onFocus={() => setIsOpen(true)}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-      />
-      {isOpen && filteredOptions.length > 0 && (
-        <DropdownList>
-          {filteredOptions.map((option, index) => (
-            <DropdownItem
-              key={option}
-              className={index === highlightedIndex ? 'highlighted' : ''}
-              onClick={() => handleSelect(option)}
-            >
-              {option}
-            </DropdownItem>
-          ))}
-        </DropdownList>
-      )}
-    </AutocompleteContainer>
-  );
-}
-
-// Course dropdown item component
-const CourseDropdownItem = ({ course, onClick, isHighlighted }) => {
-  return (
-    <DropdownItem
-      className={isHighlighted ? 'highlighted' : ''}
-      onClick={onClick}
-    >
-      <CourseBadge course={course}>{getDepartment(course)}</CourseBadge>
-      {course}
-    </DropdownItem>
-  );
-};
+// Course dropdown item with title
+const CourseDropdownItem = ({ course, title, onClick, isHighlighted }) => (
+  <DropdownItem
+    className={isHighlighted ? 'highlighted' : ''}
+    onClick={onClick}
+  >
+    <CourseBadge course={course}>{getDepartment(course)}</CourseBadge>
+    <div style={{ marginLeft: 8 }}>
+      <div>{course}</div>
+      {title && <div style={{ fontSize: '11px', color: '#666' }}>{title}</div>}
+    </div>
+  </DropdownItem>
+);
 
 function CourseConstraintsForm({ onSubmit, isLoading }) {
-  // Try to load stored constraints from localStorage
+  // Fetch available courses from API
+  const {
+    data: coursesData,
+    isLoading: isLoadingCourses,
+    isError: isCoursesError
+  } = useQuery({
+    queryKey: ['availableCourses'],
+    queryFn: fetchAvailableCourses,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    refetchOnWindowFocus: false
+  });
+  
+  // State for form
   const [constraints, setConstraints] = useState(() => {
     const savedConstraints = localStorage.getItem('courseConstraints');
     return savedConstraints ? JSON.parse(savedConstraints) : DEFAULT_CONSTRAINTS;
@@ -509,122 +375,154 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
   const [filteredCourses, setFilteredCourses] = useState([]);
   const courseDropdownRef = useRef(null);
   
-  // Save constraints to localStorage whenever they change
+  // Get available courses from API data or use fallback
+  const availableCourses = React.useMemo(() => {
+    if (coursesData?.courses) {
+      return Object.keys(coursesData.courses);
+    }
+    return FALLBACK_COURSES;
+  }, [coursesData]);
+  
+  // Helper to get course title
+  const getCourseTitle = (course) => {
+    if (coursesData?.courses?.[course]?.title) {
+      return coursesData.courses[course].title;
+    }
+    return '';
+  };
+  
+  // Helper to get instructors for a course
+  const getInstructorsForCourse = (course) => {
+    if (coursesData?.courses?.[course]?.instructors) {
+      return coursesData.courses[course].instructors;
+    }
+    return FALLBACK_INSTRUCTORS;
+  };
+  
+  // Save constraints to localStorage
   const saveConstraints = (newConstraints) => {
     localStorage.setItem('courseConstraints', JSON.stringify(newConstraints));
     setConstraints(newConstraints);
   };
   
-  // Update filtered courses when input changes
+  // Filter courses based on input
   useEffect(() => {
     if (courseInput.trim() === '') {
-      // Show more courses when empty (20 instead of 10)
-      setFilteredCourses(DEFAULT_COURSE_LIST.slice(0, 20)); 
+      // Show first 20 courses
+      setFilteredCourses(availableCourses.slice(0, 20));
     } else {
-      // More comprehensive filtering logic
       const input = courseInput.toUpperCase();
-      const filtered = DEFAULT_COURSE_LIST
+      const filtered = availableCourses
         .filter(course => {
-          // Don't show courses already added
+          // Skip courses already added
           if (constraints.required_courses.includes(course)) {
             return false;
           }
           
-          // First priority: Courses that start with the input (exact prefix match)
+          // Exact prefix match
           if (course.startsWith(input)) {
             return true;
           }
           
-          // Second priority: Courses that contain the input
+          // Contains the input
           if (course.includes(input)) {
             return true;
           }
           
-          // For short inputs (3 chars or less), be more lenient
+          // Match department for short inputs
           if (input.length <= 3) {
-            // Match department code like "CSE" or "EEE"
-            const deptMatch = course.substring(0, 3) === input;
-            return deptMatch;
+            return course.substring(0, 3) === input;
+          }
+          
+          // Match by title if available
+          const title = getCourseTitle(course);
+          if (title && title.toUpperCase().includes(input)) {
+            return true;
           }
           
           return false;
         })
-        // First show exact prefix matches, then others
+        // Sort: prefix matches first, then contains, then title matches
         .sort((a, b) => {
-          const aStartsWithInput = a.startsWith(input);
-          const bStartsWithInput = b.startsWith(input);
-          
-          if (aStartsWithInput && !bStartsWithInput) return -1;
-          if (!aStartsWithInput && bStartsWithInput) return 1;
+          if (a.startsWith(input) && !b.startsWith(input)) return -1;
+          if (!a.startsWith(input) && b.startsWith(input)) return 1;
           return 0;
         })
-        .slice(0, 20); // Show more results (20 instead of 10)
+        .slice(0, 20); // Limit to 20 results
       
       setFilteredCourses(filtered);
     }
-  }, [courseInput, constraints.required_courses]);
+  }, [courseInput, constraints.required_courses, availableCourses, getCourseTitle]);
   
-  // Handle click outside to close course dropdown
+  // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (courseDropdownRef.current && !courseDropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (e) => {
+      if (courseDropdownRef.current && !courseDropdownRef.current.contains(e.target)) {
         setShowCourseDropdown(false);
       }
     };
     
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
   
+  // Handle course selection
   const handleCourseSelect = (course) => {
     if (!constraints.required_courses.includes(course)) {
-      const newCourses = [...constraints.required_courses, course];
-      saveConstraints({ ...constraints, required_courses: newCourses });
+      saveConstraints({
+        ...constraints,
+        required_courses: [...constraints.required_courses, course]
+      });
     }
-    
     setCourseInput('');
     setShowCourseDropdown(false);
   };
   
+  // Handle course input change
   const handleCourseInputChange = (e) => {
     setCourseInput(e.target.value.toUpperCase());
     setShowCourseDropdown(true);
   };
   
+  // Handle key events in course input
   const handleCourseInputKeyDown = (e) => {
     if (e.key === 'Enter' && courseInput.trim()) {
       e.preventDefault();
       
-      if (filteredCourses.length > 0 && filteredCourses[0].startsWith(courseInput.trim())) {
-        // Select first matching course
+      // Select first matching course or add custom
+      if (filteredCourses.length > 0) {
         handleCourseSelect(filteredCourses[0]);
       } else {
         // Add custom course
         handleCourseSelect(courseInput.trim());
       }
+    } else if (e.key === 'Escape') {
+      setShowCourseDropdown(false);
     }
   };
   
+  // Remove a course
   const handleCourseRemove = (course) => {
+    // Remove course from required courses
     const newCourses = constraints.required_courses.filter(c => c !== course);
     
-    // Also remove any instructor preferences for this course
+    // Also remove any instructor preference for this course
     const newPreferences = { ...constraints.instructor_preferences };
     delete newPreferences[course];
     
-    saveConstraints({ 
-      ...constraints, 
+    saveConstraints({
+      ...constraints,
       required_courses: newCourses,
       instructor_preferences: newPreferences
     });
   };
   
+  // Update any constraint
   const handleInputChange = (field, value) => {
     saveConstraints({ ...constraints, [field]: value });
   };
   
+  // Handle day pattern changes
   const handleDayPatternChange = (pattern, isChecked) => {
     let newPatterns;
     
@@ -637,6 +535,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
     saveConstraints({ ...constraints, day_pattern: newPatterns });
   };
   
+  // Update instructor preference
   const handleInstructorPreferenceChange = (course, instructor) => {
     const newPreferences = { ...constraints.instructor_preferences };
     
@@ -649,11 +548,13 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
     saveConstraints({ ...constraints, instructor_preferences: newPreferences });
   };
   
+  // Reset to defaults
   const resetForm = () => {
     saveConstraints(DEFAULT_CONSTRAINTS);
     setErrors({});
   };
   
+  // Validate form before submission
   const validateForm = () => {
     const newErrors = {};
     
@@ -669,6 +570,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
     return Object.keys(newErrors).length === 0;
   };
   
+  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -676,10 +578,20 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
       onSubmit(constraints);
     }
   };
-  
+
   return (
     <FormContainer onSubmit={handleSubmit}>
       <FormTitle>Custom Schedule Constraints</FormTitle>
+      
+      {isLoadingCourses && (
+        <LoadingIndicator>Loading available courses and instructors...</LoadingIndicator>
+      )}
+      
+      {isCoursesError && (
+        <ErrorIndicator>
+          Error loading course data. Using fallback values.
+        </ErrorIndicator>
+      )}
       
       <FormGroup>
         <Label htmlFor="required_courses">Required Courses:</Label>
@@ -704,6 +616,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
               onKeyDown={handleCourseInputKeyDown}
               onFocus={() => setShowCourseDropdown(true)}
               placeholder="Add course..."
+              autoComplete="off"
             />
             {showCourseDropdown && filteredCourses.length > 0 && (
               <DropdownList>
@@ -711,6 +624,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
                   <CourseDropdownItem
                     key={course}
                     course={course}
+                    title={getCourseTitle(course)}
                     onClick={() => handleCourseSelect(course)}
                     isHighlighted={course === courseInput}
                   />
@@ -786,17 +700,22 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
             <InstructorRowContainer key={course}>
               <InstructorLabel>{course}:</InstructorLabel>
               <InstructorInputContainer>
-                <AutocompleteDropdown
-                  options={getInstructorsForCourse(course)}
+                <Select
                   value={constraints.instructor_preferences[course] || ''}
-                  onChange={(value) => handleInstructorPreferenceChange(course, value)}
-                  placeholder="Enter instructor code (e.g., NBM)"
-                />
+                  onChange={(e) => handleInstructorPreferenceChange(course, e.target.value)}
+                >
+                  <option value="">Any Instructor</option>
+                  {getInstructorsForCourse(course).map(instructor => (
+                    <option key={instructor} value={instructor}>
+                      {instructor}
+                    </option>
+                  ))}
+                </Select>
               </InstructorInputContainer>
             </InstructorRowContainer>
           ))}
         </div>
-        <HelperText>Enter instructor code for specific course requirements</HelperText>
+        <HelperText>Select preferred instructors for specific courses</HelperText>
       </FormGroup>
       
       <ButtonGroup>
@@ -811,4 +730,4 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
   );
 }
 
-export default CourseConstraintsForm; 
+export default CourseConstraintsForm;
