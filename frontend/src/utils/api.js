@@ -53,4 +53,18 @@ export const fetchStatus = async () => {
   }
 };
 
+/**
+ * Fetch available courses and their instructors
+ * @returns {Promise} Promise that resolves with available courses data
+ */
+export const fetchAvailableCourses = async () => {
+  try {
+    const response = await api.get('/available_courses');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching available courses:', error);
+    throw new Error('Failed to fetch available courses data.');
+  }
+};
+
 export default api; 

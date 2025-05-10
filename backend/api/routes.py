@@ -251,4 +251,47 @@ def get_status():
         'last_update': last_update_time,
         'status': 'online',
         'version': '1.0.0'
-    }) 
+    })
+
+@api_bp.route('/available_courses', methods=['GET'])
+@cross_origin()
+def get_available_courses():
+    """
+    Get all available courses and their instructors from the scraped data.
+    This endpoint is used by the frontend to populate course and instructor dropdowns.
+    """
+    try:
+        # Fetch course data
+        courses_df = fetch_course_data()
+        
+        # Process the data to extract unique courses and their instructors
+        courses_with_instructors = {}
+        
+        # Group by course_code
+        grouped = courses_df.groupby('course_code')
+        
+        for course_code, group in grouped:
+            # Clean the course code (remove spaces)
+            clean_code = course_code.replace(' ', '')
+            
+            # Get unique instructors for this course
+            instructors = group['instructor'].unique().tolist()
+            
+            # Create entry with course details and instructors
+            courses_with_instructors[clean_code] = {
+                'title': group.iloc[0]['title'] if 'title' in group else '',
+                'credit': group.iloc[0]['credit'] if 'credit' in group else '',
+                'instructors': instructors
+            }
+        
+        # Return as JSON
+        return jsonify({
+            'courses': courses_with_instructors,
+            'timestamp': time.time()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': time.time()
+        }), 500 
