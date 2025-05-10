@@ -6,34 +6,6 @@ This is a dedicated settings file for the backend Flask application.
 # URL for the NSU course offerings page
 NSU_COURSE_URL = "https://rds2.northsouth.edu/index.php/common/showofferedcourses"
 
-# Structured target courses for the filter function
-STRUCTURED_TARGET_COURSES = {
-    'lectures': [
-        'BIO103',
-        'CSE327',
-        'CSE332',
-        'EEE452',
-        'ENG115'
-    ],
-    'labs': [
-        'CHE101L',
-        'PHY108L',
-        'CSE332L'
-    ],
-    'special': {
-        'cse332': 'CSE332',
-        'cse332l': 'CSE332L'
-    }
-}
-
-# Flattened target courses
-TARGET_COURSES = []
-TARGET_COURSES.extend(STRUCTURED_TARGET_COURSES['lectures'])
-TARGET_COURSES.extend(STRUCTURED_TARGET_COURSES['labs'])
-
-# Instructor constraints
-CSE327_INSTRUCTORS = ['NBM']
-
 # Refresh interval in seconds
 REFRESH_INTERVAL = 30
 

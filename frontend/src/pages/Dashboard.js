@@ -194,149 +194,50 @@ const ModeButton = styled.button`
 function Dashboard() {
   // State for favorite schedules
   const [favorites, setFavorites] = useState(() => {
-    const savedFavorites = localStorage.getItem('favoriteSchedules');
-    return savedFavorites ? JSON.parse(savedFavorites) : [];
+    const saved = localStorage.getItem('favoriteSchedules');
+    return saved ? JSON.parse(saved) : [];
   });
-  
-  // State for evening class display toggle
-  const [showEveningClasses, setShowEveningClasses] = useState(() => {
-    const savedPreference = localStorage.getItem('showEveningClasses');
-    return savedPreference ? JSON.parse(savedPreference) : true;
-  });
-  
-  // State to track which mode we're in: default or custom
-  const [mode, setMode] = useState(() => {
-    const savedMode = localStorage.getItem('schedulerMode');
-    return savedMode || 'default';
-  });
-  
-  // Custom schedules state
-  const [customSchedulesData, setCustomSchedulesData] = useState(null);
+
+  // State for schedules
+  const [schedules, setSchedules] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [showCustomSuccess, setShowCustomSuccess] = useState(false);
-  
-  // Query for default schedules data
-  const { 
-    data: defaultData, 
-    error: defaultError, 
-    isLoading: isDefaultLoading, 
-    isError: isDefaultError, 
-    dataUpdatedAt 
-  } = useQuery({
-    queryKey: ['schedules'],
-    queryFn: fetchSchedules,
-    refetchInterval: 30000, // Refetch every 30 seconds
-    enabled: mode === 'default', // Only run query in default mode
-  });
 
-  // Mutation for generating custom schedules
-  const { 
-    mutate: generateCustomSchedules, 
-    isLoading: isGenerating, 
-    error: generateError 
-  } = useMutation({
-    mutationFn: generateSchedules,
-    onSuccess: (data) => {
-      setCustomSchedulesData(data);
+  // Handle custom constraints submission
+  const handleCustomConstraintsSubmit = async (constraints) => {
+    setIsGenerating(true);
+    setError(null);
+    try {
+      const response = await api.post('/schedules/generate', constraints);
+      setSchedules(response.data.schedules);
+      setLastUpdated(new Date());
       setShowCustomSuccess(true);
-      setTimeout(() => setShowCustomSuccess(false), 5000);
-    },
-  });
-
-  // Toggle a schedule as favorite
-  const toggleFavorite = (scheduleIndex) => {
-    setFavorites(prev => {
-      const newFavorites = prev.includes(scheduleIndex)
-        ? prev.filter(idx => idx !== scheduleIndex)
-        : [...prev, scheduleIndex];
-        
-      localStorage.setItem('favoriteSchedules', JSON.stringify(newFavorites));
-      return newFavorites;
-    });
-  };
-
-  // Toggle showing evening classes
-  const toggleEveningClasses = (value) => {
-    setShowEveningClasses(value);
-    localStorage.setItem('showEveningClasses', JSON.stringify(value));
-  };
-
-  // Switch between default and custom modes
-  const switchMode = (newMode) => {
-    setMode(newMode);
-    localStorage.setItem('schedulerMode', newMode);
-  };
-
-  // Handle form submission for custom constraints
-  const handleCustomConstraintsSubmit = (constraints) => {
-    generateCustomSchedules(constraints);
-  };
-
-  // Get appropriate data based on current mode
-  const getCurrentData = () => {
-    return mode === 'default' ? defaultData : customSchedulesData;
-  };
-
-  // Get appropriate schedules based on current mode and toggle state
-  const getCurrentSchedules = () => {
-    const data = getCurrentData();
-    if (!data || !data.schedules) return [];
-    
-    if (mode === 'default') {
-      return showEveningClasses ? data.schedules.with_evening : data.schedules.without_evening;
-    } else {
-      return data.schedules;
+      setTimeout(() => setShowCustomSuccess(false), 3000);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to generate schedules');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
-  // Get total found count based on mode and toggle state
-  const getTotalFound = () => {
-    const data = getCurrentData();
-    if (!data) return 0;
-    
-    if (mode === 'default') {
-      return data.total_found ? (showEveningClasses 
-        ? data.total_found.with_evening 
-        : data.total_found.without_evening) : 0;
-    } else {
-      return data.total_found || 0;
-    }
+  // Toggle favorite status
+  const toggleFavorite = (schedule) => {
+    const newFavorites = favorites.includes(schedule.id)
+      ? favorites.filter(id => id !== schedule.id)
+      : [...favorites, schedule.id];
+    setFavorites(newFavorites);
+    localStorage.setItem('favoriteSchedules', JSON.stringify(newFavorites));
   };
-
-  // Get the current error based on mode
-  const getCurrentError = () => {
-    return mode === 'default' ? defaultError : generateError;
-  };
-
-  // Check if there's any loading happening
-  const isLoading = mode === 'default' ? isDefaultLoading : isGenerating;
-  const isError = mode === 'default' ? isDefaultError : !!generateError;
-  const error = getCurrentError();
 
   return (
     <>
-      <ModeSwitchContainer>
-        <ModeSwitch>
-          <ModeButton 
-            active={mode === 'default'} 
-            onClick={() => switchMode('default')}
-          >
-            Default Courses
-          </ModeButton>
-          <ModeButton 
-            active={mode === 'custom'} 
-            onClick={() => switchMode('custom')}
-          >
-            Custom Constraints
-          </ModeButton>
-        </ModeSwitch>
-      </ModeSwitchContainer>
-      
-      {mode === 'custom' && (
-        <CourseConstraintsForm 
-          onSubmit={handleCustomConstraintsSubmit} 
-          isLoading={isGenerating}
-        />
-      )}
+      <CourseConstraintsForm 
+        onSubmit={handleCustomConstraintsSubmit} 
+        isLoading={isGenerating}
+      />
       
       {showCustomSuccess && (
         <SuccessMessage>
@@ -344,74 +245,28 @@ function Dashboard() {
         </SuccessMessage>
       )}
       
-      <DashboardContainer>
-        <MainContent>
-          {isLoading && !customSchedulesData ? (
-            <LoadingMessage>
-              {mode === 'default' ? 'Loading schedules...' : 'Generating schedules...'}
-            </LoadingMessage>
-          ) : isError && !customSchedulesData ? (
-            <ErrorMessage>
-              <h4>Error {mode === 'default' ? 'loading' : 'generating'} schedules</h4>
-              <p>{error?.message}</p>
-              {error?.message?.includes('offline during nighttime') && (
-                <p className="suggestion">
-                  <strong>Note about Availability:</strong> NSU's course system is typically offline overnight 
-                  (after 12 AM Bangladesh time). The scheduler will be fully functional during daytime hours.
-                </p>
-              )}
-              {error?.message?.includes('timeout') && !error?.message?.includes('offline during nighttime') && (
-                <p className="suggestion">
-                  The university website appears to be slow or unavailable. 
-                  Please try again later or switch to default schedules mode.
-                </p>
-              )}
-            </ErrorMessage>
-          ) : (
-            <>
-              {mode === 'default' && (
-                <ToggleButtonGroup>
-                  <ToggleButton 
-                    active={showEveningClasses} 
-                    onClick={() => toggleEveningClasses(true)}
-                  >
-                    Include Evening Classes (6:00 PM+)
-                  </ToggleButton>
-                  <ToggleButton 
-                    active={!showEveningClasses} 
-                    onClick={() => toggleEveningClasses(false)}
-                  >
-                    Exclude Evening Classes
-                  </ToggleButton>
-                </ToggleButtonGroup>
-              )}
-              
-              {getCurrentData() ? (
-                <ScheduleList 
-                  schedules={getCurrentSchedules()} 
-                  favorites={favorites}
-                  onToggleFavorite={toggleFavorite}
-                  showingEveningClasses={showEveningClasses}
-                />
-              ) : mode === 'custom' ? (
-                <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                  <p>Use the form above to generate schedules with custom constraints.</p>
-                </div>
-              ) : null}
-            </>
-          )}
-        </MainContent>
-        <SidePanel>
-          <StatusPanel 
-            lastUpdated={dataUpdatedAt}
-            totalSchedules={getTotalFound()}
-            stats={getCurrentData()?.stats || {}}
-            isLoading={isLoading}
-            showingEveningClasses={showEveningClasses}
-            mode={mode}
+      {error && (
+        <ErrorMessage>
+          {error}
+        </ErrorMessage>
+      )}
+      
+      <ScheduleList>
+        {schedules.map(schedule => (
+          <ScheduleCard 
+            key={schedule.id}
+            schedule={schedule}
+            isFavorite={favorites.includes(schedule.id)}
+            onToggleFavorite={() => toggleFavorite(schedule)}
           />
-        </SidePanel>
-      </DashboardContainer>
+        ))}
+      </ScheduleList>
+      
+      {lastUpdated && (
+        <LastUpdated>
+          Last updated: {lastUpdated.toLocaleTimeString()}
+        </LastUpdated>
+      )}
     </>
   );
 }

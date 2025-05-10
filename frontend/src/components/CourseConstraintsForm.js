@@ -360,16 +360,6 @@ const ErrorIndicator = styled.div`
   font-size: 0.9rem;
 `;
 
-// Default constraints
-const DEFAULT_CONSTRAINTS = {
-  required_courses: ["BIO103", "CSE327", "CSE332", "EEE452", "ENG115", "CHE101L", "PHY108L"],
-  start_time_constraint: "11:00 AM",
-  day_pattern: ["ST", "MW"],
-  exclude_evening_classes: true,
-  max_days: 5,
-  instructor_preferences: {}
-};
-
 // Time options for the dropdown
 const TIME_OPTIONS = [
   "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
@@ -382,30 +372,6 @@ const DAY_PATTERNS = [
   { value: "MW", label: "Monday-Wednesday (MW)" },
   { value: "RA", label: "Thursday-Saturday (RA)" }
 ];
-
-// Fallback courses in case API fails
-const FALLBACK_COURSES = [
-  "BIO103", "CSE327", "CSE332", "EEE452", "ENG115", "CHE101L", "PHY108L"
-];
-
-// Fallback instructors
-const FALLBACK_INSTRUCTORS = ["TBA", "NBM", "ARF"];
-
-// Course dropdown item with title
-const CourseDropdownItem = ({ course, title, onClick, isHighlighted }) => (
-  <DropdownItem
-    className={isHighlighted ? 'highlighted' : ''}
-    onClick={onClick}
-    role="option"
-    aria-selected={isHighlighted}
-  >
-    <CourseBadge course={course}>{/* Content handled by CourseBadge styles */}</CourseBadge>
-    <div style={{ marginLeft: 10, flexGrow: 1 }}>
-      <div style={{ fontWeight: 500 }}>{course}</div>
-      {title && <div style={{ fontSize: '0.8rem', color: '#666' /* Original color, overridden by hover */ }}>{title}</div>}
-    </div>
-  </DropdownItem>
-);
 
 function CourseConstraintsForm({ onSubmit, isLoading }) {
   // Fetch available courses from API
@@ -423,7 +389,14 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
   // State for form
   const [constraints, setConstraints] = useState(() => {
     const savedConstraints = localStorage.getItem('courseConstraints');
-    return savedConstraints ? JSON.parse(savedConstraints) : DEFAULT_CONSTRAINTS;
+    return savedConstraints ? JSON.parse(savedConstraints) : {
+      required_courses: [],
+      start_time_constraint: "11:00 AM",
+      day_pattern: ["ST", "MW"],
+      exclude_evening_classes: true,
+      max_days: 5,
+      instructor_preferences: {}
+    };
   });
   
   const [courseInput, setCourseInput] = useState('');
@@ -437,7 +410,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
     if (coursesData?.courses) {
       return Object.keys(coursesData.courses);
     }
-    return FALLBACK_COURSES;
+    return [];
   }, [coursesData]);
   
   // Helper to get course title
@@ -453,7 +426,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
     if (coursesData?.courses?.[course]?.instructors) {
       return coursesData.courses[course].instructors;
     }
-    return FALLBACK_INSTRUCTORS;
+    return [];
   };
   
   // Save constraints to localStorage
@@ -607,7 +580,14 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
   
   // Reset to defaults
   const resetForm = () => {
-    saveConstraints(DEFAULT_CONSTRAINTS);
+    saveConstraints({
+      required_courses: [],
+      start_time_constraint: "11:00 AM",
+      day_pattern: ["ST", "MW"],
+      exclude_evening_classes: true,
+      max_days: 5,
+      instructor_preferences: {}
+    });
     setErrors({});
   };
   
@@ -638,7 +618,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
 
   return (
     <FormContainer onSubmit={handleSubmit}>
-      <FormTitle>Custom Schedule Constraints</FormTitle>
+      <FormTitle>Course Schedule Generator</FormTitle>
       
       {isLoadingCourses && (
         <LoadingIndicator>Loading available courses and instructors...</LoadingIndicator>
@@ -646,12 +626,12 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
       
       {isCoursesError && (
         <ErrorIndicator>
-          Error loading course data. Using fallback values.
+          Error loading course data. Please try again later.
         </ErrorIndicator>
       )}
       
       <FormGroup>
-        <Label htmlFor="required_courses">Required Courses:</Label>
+        <Label htmlFor="required_courses">Select Your Courses:</Label>
         <CoursesTagInput>
           {constraints.required_courses.map(course => (
             <CourseTag key={course} course={course}>
@@ -672,7 +652,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
               onChange={handleCourseInputChange}
               onKeyDown={handleCourseInputKeyDown}
               onFocus={() => setShowCourseDropdown(true)}
-              placeholder="Add course..."
+              placeholder="Type course code (e.g., CSE327)..."
               autoComplete="off"
             />
             {showCourseDropdown && filteredCourses.length > 0 && (
@@ -690,14 +670,14 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
             )}
           </div>
         </CoursesTagInput>
+        <HelperText>Add all courses you want to take this semester</HelperText>
         {errors.required_courses && <ErrorText>{errors.required_courses}</ErrorText>}
-        <HelperText>Type to search courses or press Enter to add custom course</HelperText>
       </FormGroup>
       
       <FormGroup>
-        <Label htmlFor="start_time_constraint">Minimum Start Time (for lectures):</Label>
-        <Select 
-          id="start_time_constraint"
+        <Label htmlFor="start_time">Earliest Class Start Time:</Label>
+        <Select
+          id="start_time"
           value={constraints.start_time_constraint}
           onChange={(e) => handleInputChange('start_time_constraint', e.target.value)}
         >
@@ -705,14 +685,15 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
             <option key={time} value={time}>{time}</option>
           ))}
         </Select>
+        <HelperText>Classes will not start before this time</HelperText>
       </FormGroup>
       
       <FormGroup>
-        <Label>Day Patterns:</Label>
+        <Label>Preferred Day Patterns:</Label>
         <CheckboxContainer>
           {DAY_PATTERNS.map(pattern => (
             <CheckboxLabel key={pattern.value}>
-              <Checkbox 
+              <Checkbox
                 type="checkbox"
                 checked={constraints.day_pattern.includes(pattern.value)}
                 onChange={(e) => handleDayPatternChange(pattern.value, e.target.checked)}
@@ -721,21 +702,19 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
             </CheckboxLabel>
           ))}
         </CheckboxContainer>
-        {errors.day_pattern && <ErrorText>{errors.day_pattern}</ErrorText>}
+        <HelperText>Select which day patterns you prefer for your classes</HelperText>
       </FormGroup>
       
       <FormGroup>
-        <Label htmlFor="max_days">Maximum Days Per Week:</Label>
-        <Select 
-          id="max_days"
+        <Label>Maximum Days per Week:</Label>
+        <Select
           value={constraints.max_days}
-          onChange={(e) => handleInputChange('max_days', parseInt(e.target.value, 10))}
+          onChange={(e) => handleInputChange('max_days', parseInt(e.target.value))}
         >
-          <option value="3">3 days</option>
-          <option value="4">4 days</option>
-          <option value="5">5 days</option>
-          <option value="6">6 days</option>
+          <option value="4">4 Days</option>
+          <option value="5">5 Days</option>
         </Select>
+        <HelperText>Maximum number of different days you want to have classes</HelperText>
       </FormGroup>
       
       <FormGroup>
@@ -777,7 +756,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
       
       <ButtonGroup>
         <ResetButton type="button" onClick={resetForm}>
-          Reset to Defaults
+          Reset Form
         </ResetButton>
         <SubmitButton type="submit" disabled={isLoading}>
           {isLoading ? 'Generating...' : 'Generate Schedules'}
