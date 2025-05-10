@@ -6,21 +6,22 @@ Goals: Find sections of specified courses that fit the following criteria:
 
 Classes start after 12 PM
 Schedule spans only 4 days per week
-Classes occur only on ST (Sunday-Tuesday) and MW (Monday-Wednesday) slots
+Lecture classes occur only on ST (Sunday-Tuesday) and MW (Monday-Wednesday) slots
+Lab classes (CSE332L, PHY108L, CHE101L) can be on Thursday (R) but not on Saturday (A)
 CSE 332 lecture and lab must be in the same section
 CSE 327 must be section 1 or 7 with instructor "NBM"
 
 
 Target Courses:
 
-BIO103 (3 credits)
-CHE101L (1 credit)
-CSE327 (3 credits)
-CSE332 (3 credits)
-CSE332L (0 credits)
-EEE452 (3 credits)
-ENG115 (3 credits)
-PHY108L (1 credit)
+BIO103 (3 credits) - Lecture course - ST/MW only
+CHE101L (1 credit) - Lab course - Can be on ST/MW/R but not A
+CSE327 (3 credits) - Lecture course - ST/MW only
+CSE332 (3 credits) - Lecture course - ST/MW only
+CSE332L (0 credits) - Lab course - Can be on ST/MW/R but not A
+EEE452 (3 credits) - Lecture course - ST/MW only
+ENG115 (3 credits) - Lecture course - ST/MW only
+PHY108L (1 credit) - Lab course - Can be on ST/MW/R but not A
 
 
 Workflow:

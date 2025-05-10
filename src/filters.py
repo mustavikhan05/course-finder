@@ -71,29 +71,52 @@ def filter_after_12pm(courses_df):
     """
     return courses_df[courses_df['start_time'].apply(is_after_12pm)]
 
-def is_st_mw_only(day_str):
+def is_st_mw_only(day_str, course_code):
     """
-    Check if section days are only ST (Sunday-Tuesday) or MW (Monday-Wednesday).
+    Check if section days are appropriate based on course type.
+    Lecture courses should be on ST (Sunday-Tuesday) or MW (Monday-Wednesday) only.
+    Lab courses can also be on R (Thursday) but not on A (Saturday).
     
     Args:
         day_str (str): String containing day codes
+        course_code (str): Course code to determine if it's a lab course
     
     Returns:
-        bool: True if days are ST or MW only, False otherwise
+        bool: True if days are appropriate for the course type, False otherwise
     """
     if not day_str or pd.isna(day_str):
         return False
     
-    valid_day_combinations = ['ST', 'MW', 'S', 'M', 'T', 'W']
+    # Check if this is a lab course
+    is_lab = any(lab_code in course_code for lab_code in ['CSE332L', 'PHY108L', 'CHE101L'])
+    
+    # Define valid day combinations based on course type
+    if is_lab:
+        # Lab courses can be on ST, MW, or R
+        valid_day_combinations = ['ST', 'MW', 'S', 'M', 'T', 'W', 'R']
+        
+        # Make sure no A (Saturday) in the day string
+        if 'A' in day_str:
+            return False
+    else:
+        # Lecture courses must be on ST or MW only
+        valid_day_combinations = ['ST', 'MW', 'S', 'M', 'T', 'W']
     
     # Sort the day string to normalize it (e.g., "TS" becomes "ST")
     sorted_days = ''.join(sorted(day_str))
     
-    return sorted_days in valid_day_combinations
+    # For labs, we need to check if the day string contains only valid days
+    if is_lab:
+        return all(day in valid_day_combinations for day in day_str)
+    else:
+        # For lectures, the exact day combination must be in the valid list
+        return sorted_days in valid_day_combinations
 
 def filter_st_mw_only(courses_df):
     """
-    Filter courses to include only those with ST or MW day combinations.
+    Filter courses based on day patterns.
+    Lecture courses should be on ST/MW only.
+    Lab courses can also be on R (Thursday) but not on A (Saturday).
     
     Args:
         courses_df (pandas.DataFrame): DataFrame containing course information
@@ -101,7 +124,8 @@ def filter_st_mw_only(courses_df):
     Returns:
         pandas.DataFrame: Filtered DataFrame
     """
-    return courses_df[courses_df['days'].apply(is_st_mw_only)]
+    # Apply the day filter based on course type
+    return courses_df[courses_df.apply(lambda row: is_st_mw_only(row['days'], row['course_code']), axis=1)]
 
 def filter_cse327_sections(courses_df):
     """
@@ -115,11 +139,11 @@ def filter_cse327_sections(courses_df):
         pandas.DataFrame: Filtered DataFrame
     """
     # Create a mask that is True for non-CSE 327 courses
-    non_cse327_mask = ~courses_df['course_code'].str.startswith('CSE 327')
+    non_cse327_mask = ~courses_df['course_code'].str.contains('CSE327', case=False, na=False)
     
     # Create a mask for CSE 327 courses with section 1 or 7 and instructor NBM
     cse327_mask = (
-        courses_df['course_code'].str.startswith('CSE 327') &
+        courses_df['course_code'].str.contains('CSE327', case=False, na=False) &
         courses_df['section'].isin(['1', '7']) &
         courses_df['instructor'].str.contains('NBM', case=False, na=False)
     )
@@ -138,7 +162,7 @@ def has_same_section_cse332(schedule):
     Returns:
         bool: True if CSE 332 courses have matching sections, False otherwise
     """
-    cse332_courses = [course for course in schedule if course['course_code'].startswith('CSE 332')]
+    cse332_courses = [course for course in schedule if 'CSE332' in course['course_code']]
     
     # If there are no CSE 332 courses or only one, return True
     if len(cse332_courses) <= 1:
