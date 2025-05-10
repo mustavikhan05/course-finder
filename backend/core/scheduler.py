@@ -61,12 +61,32 @@ def generate_schedules(filtered_df):
         'days_constraint_failures': 0,
         'cse332_pair_failures': 0,
         'valid_schedules': 0,
-        'valid_partial_schedules': 0
+        'valid_partial_schedules': 0,
+        'evening_classes_count': 0,
     }
     
     # Show how many sections are available for each course
     for code in course_codes:
         print(f"Course {code} has {len(course_options[code])} sections")
+    
+    # Count evening classes (starting at or after 6:00 PM)
+    evening_sections = 0
+    for code in course_codes:
+        for section in course_options[code]:
+            start_time = section['start_time']
+            if start_time and pd.notna(start_time):
+                match = re.match(r'(\d+):(\d+)\s*(AM|PM)', start_time)
+                if match:
+                    hour, minute, ampm = match.groups()
+                    hour = int(hour)
+                    if (ampm == "PM" and hour >= 6 and hour != 12) or (ampm == "AM" and hour == 12):
+                        evening_sections += 1
+                        debug_stats['evening_classes_count'] += 1
+    
+    if evening_sections > 0:
+        print(f"Found {evening_sections} evening class sections (starting at or after 6:00 PM)")
+    else:
+        print("No evening class sections found (all start before 6:00 PM)")
     
     # Use recursive approach to build schedules
     print("Starting schedule generation...")

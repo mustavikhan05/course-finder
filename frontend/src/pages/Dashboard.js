@@ -47,11 +47,39 @@ const ErrorMessage = styled.div`
   color: #c00;
 `;
 
+const ToggleButtonGroup = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 10px;
+`;
+
+const ToggleButton = styled.button`
+  padding: 10px 15px;
+  border-radius: 4px;
+  border: 1px solid #4a90e2;
+  background-color: ${props => props.active ? '#4a90e2' : 'white'};
+  color: ${props => props.active ? 'white' : '#4a90e2'};
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: ${props => props.active ? '#3a80d2' : '#f0f8ff'};
+  }
+`;
+
 function Dashboard() {
   // State for favorite schedules
   const [favorites, setFavorites] = useState(() => {
     const savedFavorites = localStorage.getItem('favoriteSchedules');
     return savedFavorites ? JSON.parse(savedFavorites) : [];
+  });
+  
+  // State for evening class display toggle
+  const [showEveningClasses, setShowEveningClasses] = useState(() => {
+    const savedPreference = localStorage.getItem('showEveningClasses');
+    return savedPreference ? JSON.parse(savedPreference) : true;
   });
   
   // Query for schedules data
@@ -73,6 +101,26 @@ function Dashboard() {
     });
   };
 
+  // Toggle showing evening classes
+  const toggleEveningClasses = (value) => {
+    setShowEveningClasses(value);
+    localStorage.setItem('showEveningClasses', JSON.stringify(value));
+  };
+
+  // Get appropriate schedules based on current toggle state
+  const getCurrentSchedules = () => {
+    if (!data || !data.schedules) return [];
+    return showEveningClasses ? data.schedules.with_evening : data.schedules.without_evening;
+  };
+
+  // Get total found count based on toggle state
+  const getTotalFound = () => {
+    if (!data || !data.total_found) return 0;
+    return showEveningClasses 
+      ? data.total_found.with_evening 
+      : data.total_found.without_evening;
+  };
+
   return (
     <DashboardContainer>
       <MainContent>
@@ -83,19 +131,38 @@ function Dashboard() {
             Error loading schedules: {error.message}
           </ErrorMessage>
         ) : (
-          <ScheduleList 
-            schedules={data.schedules} 
-            favorites={favorites}
-            onToggleFavorite={toggleFavorite}
-          />
+          <>
+            <ToggleButtonGroup>
+              <ToggleButton 
+                active={showEveningClasses} 
+                onClick={() => toggleEveningClasses(true)}
+              >
+                Include Evening Classes (6:00 PM+)
+              </ToggleButton>
+              <ToggleButton 
+                active={!showEveningClasses} 
+                onClick={() => toggleEveningClasses(false)}
+              >
+                Exclude Evening Classes
+              </ToggleButton>
+            </ToggleButtonGroup>
+            
+            <ScheduleList 
+              schedules={getCurrentSchedules()} 
+              favorites={favorites}
+              onToggleFavorite={toggleFavorite}
+              showingEveningClasses={showEveningClasses}
+            />
+          </>
         )}
       </MainContent>
       <SidePanel>
         <StatusPanel 
           lastUpdated={dataUpdatedAt}
-          totalSchedules={data?.total_found || 0}
+          totalSchedules={getTotalFound()}
           stats={data?.stats || {}}
           isLoading={isLoading}
+          showingEveningClasses={showEveningClasses}
         />
       </SidePanel>
     </DashboardContainer>

@@ -37,6 +37,16 @@ const RefreshCountdown = styled.div`
   text-align: center;
 `;
 
+const Badge = styled.span`
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  background-color: ${props => props.showingEveningClasses ? '#4a90e2' : '#e67e22'};
+  color: white;
+  margin-left: 8px;
+`;
+
 const formatTimestamp = (timestamp) => {
   if (!timestamp) return 'Never';
   
@@ -48,7 +58,7 @@ const formatTimestamp = (timestamp) => {
   });
 };
 
-function StatusPanel({ lastUpdated, totalSchedules, stats, isLoading }) {
+function StatusPanel({ lastUpdated, totalSchedules, stats, isLoading, showingEveningClasses }) {
   const [countdown, setCountdown] = useState(30);
   
   // Update countdown timer
@@ -66,9 +76,29 @@ function StatusPanel({ lastUpdated, totalSchedules, stats, isLoading }) {
     return () => clearInterval(timer);
   }, [lastUpdated, isLoading]);
   
+  // Get the appropriate courses after filtering count
+  const getFilteredCoursesCount = () => {
+    if (!stats.courses_after_filtering) return 0;
+    
+    // Check if courses_after_filtering is an object with both types
+    if (typeof stats.courses_after_filtering === 'object') {
+      return showingEveningClasses 
+        ? stats.courses_after_filtering.with_evening || 0
+        : stats.courses_after_filtering.without_evening || 0; 
+    }
+    
+    // Fallback to direct value if it's not structured
+    return stats.courses_after_filtering;
+  };
+  
   return (
     <Panel>
-      <PanelTitle>System Status</PanelTitle>
+      <PanelTitle>
+        System Status
+        <Badge showingEveningClasses={showingEveningClasses}>
+          {showingEveningClasses ? 'With Evening' : 'No Evening'}
+        </Badge>
+      </PanelTitle>
       
       <StatusItem>
         <Label>Last Updated</Label>
@@ -87,7 +117,7 @@ function StatusPanel({ lastUpdated, totalSchedules, stats, isLoading }) {
       
       <StatusItem>
         <Label>Courses After Filtering</Label>
-        <Value>{stats.courses_after_filtering || 0}</Value>
+        <Value>{getFilteredCoursesCount()}</Value>
       </StatusItem>
       
       <RefreshCountdown>

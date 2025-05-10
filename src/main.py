@@ -6,7 +6,7 @@ This module serves as the entry point for the NSU Course Scheduler application.
 It orchestrates the scraping, filtering, and scheduling processes and displays
 the results in a simple dashboard that refreshes periodically.
 
-The system applies 11 hard constraints:
+The system applies 12 hard constraints:
 H1: Required lectures – choose exactly one lecture section for each of: BIO 103, CSE 327, CSE 332, EEE 452, ENG 115
 H2: Required labs – choose exactly one lab section for each of: CHE 101 L and PHY 108 L
 H3: Lecture start‐time ≥ 11:00 (inclusive) for every non-lab section
@@ -18,6 +18,7 @@ H8: No time collisions – if two chosen sections share at least one day and the
 H9: Seat availability – only select sections with seats > 0
 H10: No 08:00 labs – exclude any lab whose start_time is exactly "08:00"
 H11: At most 5 distinct class-days per week
+H12: No evening classes - exclude any section with start time ≥ 6:00 PM (optional filter)
 
 Soft Preferences for ranking valid schedules:
 P1: 4 distinct class-days (perfect) vs 5 - +100 if 4 days, +50 if 5 days
@@ -32,14 +33,17 @@ from colorama import Fore, Style
 
 from scraper import fetch_course_data
 from filters import apply_filters, filter_after_11am, filter_st_mw_only, filter_cse327_sections
-from filters import filter_available_seats, filter_early_morning_labs
+from filters import filter_available_seats, filter_early_morning_labs, filter_evening_classes
 from scheduler import generate_schedules, score_schedule, format_schedule
 
 # Initialize colorama for cross-platform colored terminal output
 colorama.init()
 
 # Store previous valid schedules to detect changes
-previous_schedules = []
+previous_schedules = {
+    "with_evening": [],
+    "without_evening": []
+}
 
 def update_schedules():
     """
@@ -51,67 +55,48 @@ def update_schedules():
         courses_df = fetch_course_data()
         print(f"{Fore.CYAN}Total courses fetched: {len(courses_df)}{Style.RESET_ALL}")
         
-        # See what's available for each target course
-        for course in ['BIO103', 'CHE101L', 'CSE327', 'CSE332/EEE336', 'CSE332L/EEE336L', 'EEE452', 'ENG115', 'PHY108L']:
-            filtered = courses_df[courses_df['course_code'].str.contains(course, case=False, na=False)]
-            print(f"{course}: {len(filtered)} sections available")
+        # Apply filters and generate schedules with evening classes included
+        print(f"{Fore.GREEN}=== GENERATING SCHEDULES WITH EVENING CLASSES INCLUDED ==={Style.RESET_ALL}")
+        filtered_df_with_evening = apply_filters(courses_df, exclude_evening_classes=False)
+        valid_schedules_with_evening = generate_schedules(filtered_df_with_evening)
         
-        # Apply time filter and show results (H3)
-        time_filtered_df = filter_after_11am(courses_df)
-        print(f"{Fore.CYAN}After 11AM filter: {len(time_filtered_df)} courses remaining{Style.RESET_ALL}")
-        
-        # Apply day filter and show results (H4, H5)
-        day_filtered_df = filter_st_mw_only(time_filtered_df)
-        print(f"{Fore.CYAN}After ST/MW only filter for lectures: {len(day_filtered_df)} courses remaining{Style.RESET_ALL}")
-        
-        # Apply CSE327 filter and show results (H7)
-        cse327_filtered_df = filter_cse327_sections(day_filtered_df)
-        print(f"{Fore.CYAN}After CSE327 section/instructor filter: {len(cse327_filtered_df)} courses remaining{Style.RESET_ALL}")
-        
-        # Apply seats filter (H9)
-        seats_filtered_df = filter_available_seats(cse327_filtered_df)
-        print(f"{Fore.CYAN}After available seats filter: {len(seats_filtered_df)} courses remaining{Style.RESET_ALL}")
-        
-        # Apply early morning lab filter (H10)
-        morning_filtered_df = filter_early_morning_labs(seats_filtered_df)
-        print(f"{Fore.CYAN}After early morning lab filter: {len(morning_filtered_df)} courses remaining{Style.RESET_ALL}")
-        
-        # Check what's left for each target course
-        for course in ['BIO103', 'CHE101L', 'CSE327', 'CSE332/EEE336', 'CSE332L/EEE336L', 'EEE452', 'ENG115', 'PHY108L']:
-            filtered = morning_filtered_df[morning_filtered_df['course_code'].str.contains(course, case=False, na=False)]
-            if len(filtered) > 0:
-                print(f"{course}: {len(filtered)} sections remaining after filtering")
-            else:
-                print(f"{Fore.RED}{course}: 0 sections remaining (this is why no valid schedules can be found){Style.RESET_ALL}")
-        
-        # Apply all filters
-        filtered_df = apply_filters(courses_df)
-        
-        # Generate valid schedule combinations
-        valid_schedules = generate_schedules(filtered_df)
+        # Apply filters and generate schedules without evening classes
+        print(f"{Fore.GREEN}=== GENERATING SCHEDULES WITHOUT EVENING CLASSES ==={Style.RESET_ALL}")
+        filtered_df_without_evening = apply_filters(courses_df, exclude_evening_classes=True)
+        valid_schedules_without_evening = generate_schedules(filtered_df_without_evening)
         
         # Display results
-        display_schedules(valid_schedules)
+        print(f"{Fore.CYAN}==== SCHEDULES INCLUDING EVENING CLASSES ===={Style.RESET_ALL}")
+        display_schedules(valid_schedules_with_evening, "with_evening")
+        
+        print(f"{Fore.CYAN}==== SCHEDULES EXCLUDING EVENING CLASSES (START TIME < 6:00 PM) ===={Style.RESET_ALL}")
+        display_schedules(valid_schedules_without_evening, "without_evening")
         
         # Update previous schedules for change detection
         global previous_schedules
-        previous_schedules = valid_schedules
+        previous_schedules = {
+            "with_evening": valid_schedules_with_evening,
+            "without_evening": valid_schedules_without_evening
+        }
         
     except Exception as e:
         print(f"{Fore.RED}Error: {str(e)}{Style.RESET_ALL}")
 
-def display_schedules(schedules):
+def display_schedules(schedules, schedule_type):
     """
     Display valid schedules in a formatted way with color highlighting.
     
     Args:
         schedules: List of valid schedule combinations
+        schedule_type: Type of schedule ("with_evening" or "without_evening")
     """
+    prev_schedules = previous_schedules.get(schedule_type, [])
+    
     if not schedules:
         print(f"{Fore.YELLOW}No valid schedules found that meet all criteria.{Style.RESET_ALL}")
         return
     
-    print(f"{Fore.GREEN}Found {len(schedules)} valid schedules:{Style.RESET_ALL}")
+    print(f"{Fore.GREEN}Found {len(schedules)} valid schedules{Style.RESET_ALL}")
     
     # Sort schedules by score (higher is better)
     sorted_schedules = sorted(schedules, key=lambda x: -score_schedule(x))
@@ -124,9 +109,9 @@ def display_schedules(schedules):
         is_new = False
         
         # Check if this is a new schedule compared to previous run
-        if previous_schedules and i < len(previous_schedules):
-            if set(tuple(sorted(course.items())) for course in schedule) != \
-               set(tuple(sorted(course.items())) for course in previous_schedules[i]):
+        if prev_schedules and i < len(prev_schedules):
+            if set(tuple(sorted((k, str(v)) for k, v in course.items())) for course in schedule) != \
+               set(tuple(sorted((k, str(v)) for k, v in course.items())) for course in prev_schedules[i]):
                 is_new = True
         
         # Display header for this schedule
@@ -159,6 +144,7 @@ def main():
     print("H9: Seat availability – only select sections with seats > 0")
     print("H10: No 08:00 labs – exclude any lab whose start_time is exactly \"08:00\"")
     print("H11: At most 5 distinct class-days per week")
+    print("H12: No evening classes – exclude any section with start time ≥ 6:00 PM (optional filter)")
     
     # Run once immediately
     update_schedules()

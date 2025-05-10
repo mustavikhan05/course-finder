@@ -2,7 +2,7 @@
 """
 NSU Course Scheduler - Filter Implementation Module
 
-This module provides functions for filtering course sections based on 11 hard constraints:
+This module provides functions for filtering course sections based on 12 hard constraints:
 H1: Required lectures – choose exactly one lecture section for each of: BIO 103, CSE 327, CSE 332, EEE 452, ENG 115
 H2: Required labs – choose exactly one lab section for each of: CHE 101 L and PHY 108 L
 H3: Lecture start‐time ≥ 11:00 (inclusive) for every non-lab section
@@ -14,18 +14,20 @@ H8: No time collisions – if two chosen sections share at least one day and the
 H9: Seat availability – only select sections with seats > 0
 H10: No 08:00 labs – exclude any lab whose start_time is exactly "08:00"
 H11: At most 5 distinct class-days per week
+H12: No evening classes - exclude any section with start time ≥ 6:00 PM (optional filter)
 """
 
 import pandas as pd
 from datetime import datetime
 import re
 
-def apply_filters(courses_df):
+def apply_filters(courses_df, exclude_evening_classes=False):
     """
     Apply all filtering criteria to the courses DataFrame.
     
     Args:
         courses_df (pandas.DataFrame): DataFrame containing course information
+        exclude_evening_classes (bool): Whether to exclude evening classes (starting at or after 6:00 PM)
     
     Returns:
         pandas.DataFrame: Filtered DataFrame with courses meeting all criteria
@@ -47,6 +49,10 @@ def apply_filters(courses_df):
     
     # H10: Filter out labs starting at 08:00
     filtered_df = filter_early_morning_labs(filtered_df)
+    
+    # H12: Optional - filter out evening classes (starting at or after 6:00 PM)
+    if exclude_evening_classes:
+        filtered_df = filter_evening_classes(filtered_df)
     
     # H6: CSE 332 lecture and lab in same section is handled during schedule generation
     
@@ -220,6 +226,57 @@ def filter_early_morning_labs(courses_df):
     mask = ~(lab_courses & early_morning)
     
     return courses_df[mask]
+
+def filter_evening_classes(courses_df):
+    """
+    H12: Filter out evening classes that start at or after 6:00 PM.
+    
+    Args:
+        courses_df (pandas.DataFrame): DataFrame containing course information
+    
+    Returns:
+        pandas.DataFrame: Filtered DataFrame without evening classes
+    """
+    # Create a mask for courses that start before 6:00 PM
+    mask = courses_df['start_time'].apply(is_before_6pm)
+    
+    return courses_df[mask]
+
+def is_before_6pm(time_str):
+    """
+    Check if a start time is before 6:00 PM.
+    
+    Args:
+        time_str (str): Time string in format like "5:00 PM"
+    
+    Returns:
+        bool: True if time is before 6:00 PM, False otherwise
+    """
+    if not time_str or pd.isna(time_str):
+        return False
+    
+    try:
+        # Parse the time string into components
+        match = re.match(r'(\d+):(\d+)\s*(AM|PM)', time_str)
+        if not match:
+            return False
+            
+        hour, minute, ampm = match.groups()
+        hour = int(hour)
+        
+        # Any AM time is before 6 PM
+        if ampm == "AM":
+            return True
+        # PM time before 6:00 PM
+        elif ampm == "PM" and hour < 6:
+            return True
+        # 12:00 PM is noon, before 6 PM
+        elif ampm == "PM" and hour == 12:
+            return True
+            
+        return False
+    except:
+        return False
 
 def has_same_section_cse332(schedule):
     """

@@ -16,6 +16,7 @@ H8: No time collisions – if two chosen sections share at least one day and the
 H9: Seat availability – only select sections with seats > 0
 H10: No 08:00 labs – exclude any lab whose start_time is exactly "08:00"
 H11: At most 5 distinct class-days per week
+H12: No evening classes - exclude any section with start time ≥ 6:00 PM (optional filter)
 
 ### Soft Preferences (For ranking valid schedules)
 P1: 4 distinct class-days (perfect) vs 5 - +100 if 4 days, +50 if 5 days
@@ -97,6 +98,7 @@ Workflow:
 - [x] Create filter to exclude 08:00 AM lab sections (June 2, 2023) - DONE
 - [x] Implement function to count distinct days in a schedule (must be ≤ 5 days) (June 2, 2023) - DONE
 - [x] Create master filter function that applies all hard constraints to course DataFrame (June 2, 2023) - DONE
+- [x] Implement optional filter to exclude evening classes (start time ≥ 6:00 PM) (May 10, 2025) - DONE
 
 ## 3. Schedule Generator (`scheduler.py`)
 
@@ -120,6 +122,7 @@ Workflow:
 - [x] Implement basic configuration options (refresh rate, display preferences) (May 10, 2023) - DONE
 - [x] Add simple notification for when new valid schedules appear (May 10, 2023) - DONE
 - [x] Update display to show top 10 schedules instead of top 5 (June 2, 2023) - DONE
+- [x] Add dual display mode to show both schedules with and without evening classes (May 10, 2025) - DONE
 
 ## 5. Testing & Refinement
 
@@ -145,8 +148,8 @@ Workflow:
 
 ## Current Status (May 10, 2025)
 
-1. **Successfully Implemented All 11 Hard Constraints**:
-   - H1-H11 constraints properly applied during filtering and schedule generation
+1. **Successfully Implemented All 12 Hard Constraints**:
+   - H1-H12 constraints properly applied during filtering and schedule generation
    - Finding 920 valid complete schedules that meet all criteria
 
 2. **Schedule Scoring System**:
@@ -174,7 +177,7 @@ Workflow:
    - Error handling and status reporting
    - Successfully tested API endpoints
 
-The system is now fully functional for monitoring available course sections and finding optimal schedules that meet all 11 hard constraints, ranked according to the 3 soft preferences. Both CLI and Web interfaces are operational, with the web interface offering additional features like favorites and filtering.
+The system is now fully functional for monitoring available course sections and finding optimal schedules that meet all 12 hard constraints, ranked according to the 3 soft preferences. Both CLI and Web interfaces are operational, with the web interface offering additional features like favorites and filtering.
 
 ## How to Run the Application
 
@@ -302,6 +305,7 @@ Both implementations use the same core logic (scraper.py, filters.py, scheduler.
    - [ ] Browser notifications when marked schedules change
    - [ ] Customizable refresh rate
    - [x] Filter adjustment controls (May 10, 2025)
+   - [x] Toggle for including/excluding evening classes (start time ≥ 6:00 PM) (May 10, 2025) - DONE
 
 ## Web App Technical Approach
 

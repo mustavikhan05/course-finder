@@ -16,6 +16,20 @@ const Header = styled.div`
 const Title = styled.h2`
   margin: 0;
   color: #333;
+  display: flex;
+  align-items: center;
+`;
+
+const ViewBadge = styled.span`
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  background-color: ${props => props.showingEveningClasses ? '#4a90e2' : '#e67e22'};
+  color: white;
+  margin-left: 10px;
+  font-weight: normal;
+  font-size: 0.8rem;
 `;
 
 const Count = styled.span`
@@ -57,25 +71,38 @@ const FilterButton = styled.button`
   }
 `;
 
-function ScheduleList({ schedules, favorites, onToggleFavorite }) {
+function ScheduleList({ schedules, favorites, onToggleFavorite, showingEveningClasses }) {
   const [filter, setFilter] = useState('all'); // 'all', 'favorites', 'new'
   
   if (!schedules || schedules.length === 0) {
     return (
       <Container>
         <Header>
-          <Title>Schedules</Title>
+          <Title>
+            Schedules
+            <ViewBadge showingEveningClasses={showingEveningClasses}>
+              {showingEveningClasses ? 'Including Evening Classes' : 'Excluding Evening Classes'}
+            </ViewBadge>
+          </Title>
           <Count>No schedules found</Count>
         </Header>
         <EmptyMessage>
           No valid schedules were found that meet all constraints.
+          {!showingEveningClasses && (
+            <div style={{ marginTop: '10px', fontStyle: 'italic' }}>
+              Try enabling evening classes to see more options.
+            </div>
+          )}
         </EmptyMessage>
       </Container>
     );
   }
   
+  // Ensure schedules is an array we can filter
+  const schedulesArray = Array.isArray(schedules) ? schedules : [];
+  
   // Filter schedules based on current filter
-  const filteredSchedules = schedules.filter((schedule, index) => {
+  const filteredSchedules = schedulesArray.filter((schedule, index) => {
     if (filter === 'all') return true;
     if (filter === 'favorites') return favorites.includes(index);
     if (filter === 'new') return schedule.is_new;
@@ -85,8 +112,13 @@ function ScheduleList({ schedules, favorites, onToggleFavorite }) {
   return (
     <Container>
       <Header>
-        <Title>Schedules</Title>
-        <Count>{schedules.length} schedules found</Count>
+        <Title>
+          Schedules
+          <ViewBadge showingEveningClasses={showingEveningClasses}>
+            {showingEveningClasses ? 'Including Evening Classes' : 'Excluding Evening Classes'}
+          </ViewBadge>
+        </Title>
+        <Count>{schedulesArray.length} schedules found</Count>
       </Header>
       
       <FilterBar>
@@ -120,8 +152,8 @@ function ScheduleList({ schedules, favorites, onToggleFavorite }) {
             <Schedule 
               key={index}
               schedule={schedule}
-              index={schedules.indexOf(schedule)}
-              isFavorite={favorites.includes(schedules.indexOf(schedule))}
+              index={schedulesArray.indexOf(schedule)}
+              isFavorite={favorites.includes(schedulesArray.indexOf(schedule))}
               onToggleFavorite={onToggleFavorite}
             />
           ))}
