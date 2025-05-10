@@ -95,13 +95,47 @@ const CoursesTagInput = styled.div`
 `;
 
 const CourseTag = styled.div`
-  background-color: #e1f0fe;
-  border: 1px solid #c1e0fe;
+  background-color: ${props => {
+    // Choose color based on course department
+    const dept = getDepartment(props.course);
+    if (dept === 'CSE') return '#e3f2fd'; // Light Blue
+    if (dept === 'EEE') return '#e8f5e9'; // Light Green
+    if (dept === 'MAT') return '#f3e5f5'; // Light Purple
+    if (dept === 'BIO') return '#fff3e0'; // Light Orange
+    if (dept === 'PHY') return '#ffebee'; // Light Red
+    if (dept === 'CHE') return '#e1e4f2'; // Light Indigo
+    if (dept === 'ENG') return '#e0f2f1'; // Light Teal
+    return '#f5f5f5'; // Light Gray for others
+  }};
+  border: 1px solid ${props => {
+    // Choose color based on course department
+    const dept = getDepartment(props.course);
+    if (dept === 'CSE') return '#bbdefb'; // Blue border
+    if (dept === 'EEE') return '#c8e6c9'; // Green border
+    if (dept === 'MAT') return '#e1bee7'; // Purple border
+    if (dept === 'BIO') return '#ffe0b2'; // Orange border
+    if (dept === 'PHY') return '#ffcdd2'; // Red border
+    if (dept === 'CHE') return '#c5cae9'; // Indigo border
+    if (dept === 'ENG') return '#b2dfdb'; // Teal border
+    return '#e0e0e0'; // Gray border for others
+  }};
   border-radius: 4px;
   padding: 2px 8px;
   display: flex;
   align-items: center;
   font-size: 14px;
+  color: ${props => {
+    // Text color based on department
+    const dept = getDepartment(props.course);
+    if (dept === 'CSE') return '#1565c0'; // Blue text
+    if (dept === 'EEE') return '#2e7d32'; // Green text
+    if (dept === 'MAT') return '#6a1b9a'; // Purple text
+    if (dept === 'BIO') return '#e65100'; // Orange text
+    if (dept === 'PHY') return '#c62828'; // Red text
+    if (dept === 'CHE') return '#283593'; // Indigo text
+    if (dept === 'ENG') return '#00695c'; // Teal text
+    return '#424242'; // Gray text for others
+  }};
 `;
 
 const RemoveCourseBtn = styled.button`
@@ -199,7 +233,7 @@ const AutocompleteInput = styled.input`
 const DropdownList = styled.ul`
   position: absolute;
   width: 100%;
-  max-height: 200px;
+  max-height: 300px;
   overflow-y: auto;
   margin: 0;
   padding: 0;
@@ -215,6 +249,8 @@ const DropdownList = styled.ul`
 const DropdownItem = styled.li`
   padding: 8px 12px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
   
   &:hover {
     background-color: #f5f8ff;
@@ -223,6 +259,33 @@ const DropdownItem = styled.li`
   &.highlighted {
     background-color: #e1f0fe;
   }
+`;
+
+// Get the department code from a course code
+const getDepartment = (course) => {
+  const match = course.match(/^([A-Z]{3})/);
+  return match ? match[1] : '';
+};
+
+// Course badge with department color
+const CourseBadge = styled.span`
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  background-color: ${props => {
+    // Choose color based on course department
+    const dept = getDepartment(props.course);
+    if (dept === 'CSE') return '#4a90e2'; // Blue
+    if (dept === 'EEE') return '#50b83c'; // Green
+    if (dept === 'MAT') return '#8c4bff'; // Purple
+    if (dept === 'BIO') return '#f08a24'; // Orange
+    if (dept === 'PHY') return '#d8315b'; // Red
+    if (dept === 'CHE') return '#639'; // Indigo
+    if (dept === 'ENG') return '#4b8e8d'; // Teal
+    return '#8c8c8c'; // Gray for others
+  }};
 `;
 
 const InstructorRowContainer = styled.div`
@@ -264,17 +327,62 @@ const DAY_PATTERNS = [
 ];
 
 const DEFAULT_COURSE_LIST = [
-  "BIO103", "CSE327", "CSE332", "EEE452", "ENG115", "CHE101L", "PHY108L",
-  "PHY107", "MAT116", "MAT125", "MAT130", "MAT250", "MAT350", "MAT361", "CSE115",
-  "CSE215", "CSE173", "CSE225", "CSE231", "CSE299", "CSE323", "CSE331", "CSE338",
-  "CSE373", "CSE425", "CSE473", "EEE141", "EEE111", "EEE154", "EEE201", "EEE312"
+  // Core courses mentioned in constraints
+  "BIO103", "CSE327", "CSE332", "CSE332L", "EEE452", "ENG115", "CHE101L", "PHY108L",
+  
+  // Common CSE courses
+  "CSE115", "CSE115L", "CSE173", "CSE215", "CSE215L", "CSE225", "CSE225L", "CSE231", 
+  "CSE231L", "CSE299", "CSE299L", "CSE323", "CSE331", "CSE331L", "CSE338", "CSE373", 
+  "CSE411", "CSE425", "CSE434", "CSE440", "CSE445", "CSE465", "CSE473", "CSE491",
+  
+  // Common EEE courses
+  "EEE111", "EEE111L", "EEE141", "EEE142", "EEE154", "EEE201", "EEE203", "EEE205", 
+  "EEE209", "EEE221", "EEE223", "EEE301", "EEE303", "EEE305", "EEE309", "EEE312", 
+  "EEE321", "EEE405", "EEE409", "EEE412", "EEE415", "EEE419", "EEE421", "EEE451",
+  
+  // MAT courses
+  "MAT116", "MAT120", "MAT125", "MAT130", "MAT250", "MAT350", "MAT361", "MAT370",
+  
+  // PHY courses
+  "PHY107", "PHY107L", "PHY108", "PHY109", "PHY209", "PHY499",
+
+  // BIO courses
+  "BIO103L", "BIO104", "BIO104L", "BIO210", "BIO220", "BIO320", "BIO330",
+  
+  // CHE courses
+  "CHE101", "CHE201", "CHE210",
+  
+  // Other common courses
+  "ENG101", "ENG102", "ENG103", "ENG111", "ENV101", "ENV107"
 ];
 
-// Sample faculty list - in a real implementation, this would come from the API
-const FACULTY_LIST = [
-  "NBM", "TBA", "ARF", "ADP", "HrR", "ShC", "TAN", "MZI", "RAK", "SRH", "AHN", 
-  "MIB", "AKO", "RHK", "JBR", "MKR", "NZM", "AST", "FAR", "MQU", "SKB", "NMF"
-];
+// Create a mapping of courses to their likely instructors
+// In a real implementation, this would be fetched from the API or a database
+const COURSE_INSTRUCTOR_MAP = {
+  "CSE327": ["NBM", "ARF", "TAN", "MZI"],
+  "CSE332": ["MAQM", "MIB", "FAR", "TBA"],
+  "CSE115": ["AKO", "RHK", "JBR", "TBA"],
+  "CSE215": ["MKR", "NZM", "TBA"],
+  "EEE452": ["SKB", "NMF", "TBA"],
+  "ENG115": ["ShC", "TBA"],
+  "BIO103": ["SUBK", "BAS", "TBA"],
+  "PHY108L": ["HrR", "TBA"],
+  "CHE101L": ["ADP", "TBA"]
+};
+
+// Default instructors to show when no mapping exists for a course
+const DEFAULT_INSTRUCTORS = ["TBA", "NBM", "ARF", "ADP", "HrR", "ShC", "TAN", "MZI", "RAK", "SRH", "AHN", "MIB", "AKO"];
+
+// Function to get instructor suggestions for a specific course
+function getInstructorsForCourse(course) {
+  // If we have specific instructors for this course, return them
+  if (COURSE_INSTRUCTOR_MAP[course]) {
+    return COURSE_INSTRUCTOR_MAP[course];
+  }
+  
+  // Otherwise return default instructors
+  return DEFAULT_INSTRUCTORS;
+}
 
 function AutocompleteDropdown({ 
   options, 
@@ -375,6 +483,19 @@ function AutocompleteDropdown({
   );
 }
 
+// Course dropdown item component
+const CourseDropdownItem = ({ course, onClick, isHighlighted }) => {
+  return (
+    <DropdownItem
+      className={isHighlighted ? 'highlighted' : ''}
+      onClick={onClick}
+    >
+      <CourseBadge course={course}>{getDepartment(course)}</CourseBadge>
+      {course}
+    </DropdownItem>
+  );
+};
+
 function CourseConstraintsForm({ onSubmit, isLoading }) {
   // Try to load stored constraints from localStorage
   const [constraints, setConstraints] = useState(() => {
@@ -397,14 +518,48 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
   // Update filtered courses when input changes
   useEffect(() => {
     if (courseInput.trim() === '') {
-      setFilteredCourses(DEFAULT_COURSE_LIST.slice(0, 10)); // Show first 10 when empty
+      // Show more courses when empty (20 instead of 10)
+      setFilteredCourses(DEFAULT_COURSE_LIST.slice(0, 20)); 
     } else {
+      // More comprehensive filtering logic
+      const input = courseInput.toUpperCase();
       const filtered = DEFAULT_COURSE_LIST
-        .filter(course => 
-          course.includes(courseInput.toUpperCase()) && 
-          !constraints.required_courses.includes(course)
-        )
-        .slice(0, 10); // Limit to 10 results
+        .filter(course => {
+          // Don't show courses already added
+          if (constraints.required_courses.includes(course)) {
+            return false;
+          }
+          
+          // First priority: Courses that start with the input (exact prefix match)
+          if (course.startsWith(input)) {
+            return true;
+          }
+          
+          // Second priority: Courses that contain the input
+          if (course.includes(input)) {
+            return true;
+          }
+          
+          // For short inputs (3 chars or less), be more lenient
+          if (input.length <= 3) {
+            // Match department code like "CSE" or "EEE"
+            const deptMatch = course.substring(0, 3) === input;
+            return deptMatch;
+          }
+          
+          return false;
+        })
+        // First show exact prefix matches, then others
+        .sort((a, b) => {
+          const aStartsWithInput = a.startsWith(input);
+          const bStartsWithInput = b.startsWith(input);
+          
+          if (aStartsWithInput && !bStartsWithInput) return -1;
+          if (!aStartsWithInput && bStartsWithInput) return 1;
+          return 0;
+        })
+        .slice(0, 20); // Show more results (20 instead of 10)
+      
       setFilteredCourses(filtered);
     }
   }, [courseInput, constraints.required_courses]);
@@ -530,7 +685,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
         <Label htmlFor="required_courses">Required Courses:</Label>
         <CoursesTagInput>
           {constraints.required_courses.map(course => (
-            <CourseTag key={course}>
+            <CourseTag key={course} course={course}>
               {course}
               <RemoveCourseBtn 
                 type="button" 
@@ -553,12 +708,12 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
             {showCourseDropdown && filteredCourses.length > 0 && (
               <DropdownList>
                 {filteredCourses.map(course => (
-                  <DropdownItem 
-                    key={course} 
+                  <CourseDropdownItem
+                    key={course}
+                    course={course}
                     onClick={() => handleCourseSelect(course)}
-                  >
-                    {course}
-                  </DropdownItem>
+                    isHighlighted={course === courseInput}
+                  />
                 ))}
               </DropdownList>
             )}
@@ -632,7 +787,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
               <InstructorLabel>{course}:</InstructorLabel>
               <InstructorInputContainer>
                 <AutocompleteDropdown
-                  options={FACULTY_LIST}
+                  options={getInstructorsForCourse(course)}
                   value={constraints.instructor_preferences[course] || ''}
                   onChange={(value) => handleInstructorPreferenceChange(course, value)}
                   placeholder="Enter instructor code (e.g., NBM)"
