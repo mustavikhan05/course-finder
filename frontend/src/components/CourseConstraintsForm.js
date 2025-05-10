@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styled from 'styled-components';
 import { useQuery } from '@tanstack/react-query';
 import { fetchAvailableCourses } from '../utils/api';
@@ -32,6 +32,53 @@ const colors = {
   engTeal: '#319795', engTealLight: '#B2F5EA', engTealText: '#285E61',
   otherGray: '#718096', otherGrayLight: '#EDF2F7', otherGrayText: '#2D3748',
 };
+
+// First, define the getDepartmentColors function
+const getDepartmentColors = (course) => {
+  const dept = (course.match(/^([A-Z]{3})/) || [])[1];
+  switch (dept) {
+    case 'CSE': return { bg: colors.cseBlueLight, border: colors.cseBlue, text: colors.cseBlueText };
+    case 'EEE': return { bg: colors.eeeGreenLight, border: colors.eeeGreen, text: colors.eeeGreenText };
+    case 'MAT': return { bg: colors.matPurpleLight, border: colors.matPurple, text: colors.matPurpleText };
+    case 'BIO': return { bg: colors.bioOrangeLight, border: colors.bioOrange, text: colors.bioOrangeText };
+    case 'PHY': return { bg: colors.phyRedLight, border: colors.phyRed, text: colors.phyRedText };
+    case 'CHE': return { bg: colors.cheIndigoLight, border: colors.cheIndigo, text: colors.cheIndigoText };
+    case 'ENG': return { bg: colors.engTealLight, border: colors.engTeal, text: colors.engTealText };
+    default: return { bg: colors.otherGrayLight, border: colors.otherGray, text: colors.otherGrayText };
+  }
+};
+
+// Then define CourseBadge
+const CourseBadge = styled.span`
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: ${props => getDepartmentColors(props.course).text};
+  background-color: ${props => getDepartmentColors(props.course).bg};
+  border: 1px solid ${props => getDepartmentColors(props.course).border};
+  line-height: 1.2;
+`;
+
+// Define CourseTag component
+const CourseTag = styled.div`
+  background-color: ${props => getDepartmentColors(props.course).bg};
+  border: none;
+  border-radius: 30px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: ${props => getDepartmentColors(props.course).text};
+  font-weight: 600;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.1);
+  }
+`;
 
 // More modern card styling with subtle gradient and shadow
 const FormContainer = styled.form`
@@ -138,6 +185,8 @@ const inputStyles = `
   }
 `;
 
+// Add comment to disable the ESLint warning for Input
+// eslint-disable-next-line no-unused-vars
 const Input = styled.input`
   ${inputStyles}
   height: 44px; // Taller input for better touch targets
@@ -302,26 +351,6 @@ const CoursesTagInput = styled.div`
     outline: none;
     border-color: ${colors.primary};
     box-shadow: 0 0 0 3px ${colors.primaryLight};
-  }
-`;
-
-// More vibrant course tags
-const CourseTag = styled.div`
-  background-color: ${props => getDepartmentColors(props.course).bg};
-  border: none;
-  border-radius: 30px;
-  padding: 6px 12px;
-  display: flex;
-  align-items: center;
-  font-size: 0.9rem;
-  color: ${props => getDepartmentColors(props.course).text};
-  font-weight: 600;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
-  
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.1);
   }
 `;
 
@@ -645,7 +674,7 @@ const CustomTimeSelector = ({ value, onChange, options, onOpenCallback, globalOv
     if (!globalOverlayVisible && showDropdown) {
       setShowDropdown(false);
     }
-  }, [globalOverlayVisible]);
+  }, [globalOverlayVisible, showDropdown]);
   
   return (
     <TimeSelector ref={dropdownRef}>
@@ -679,33 +708,6 @@ const GlobalOverlay = styled.div`
   bottom: 0;
   z-index: 1000;
   background-color: transparent;
-`;
-
-// Add back the missing getDepartmentColors function
-const getDepartmentColors = (course) => {
-  const dept = (course.match(/^([A-Z]{3})/) || [])[1];
-  switch (dept) {
-    case 'CSE': return { bg: colors.cseBlueLight, border: colors.cseBlue, text: colors.cseBlueText };
-    case 'EEE': return { bg: colors.eeeGreenLight, border: colors.eeeGreen, text: colors.eeeGreenText };
-    case 'MAT': return { bg: colors.matPurpleLight, border: colors.matPurple, text: colors.matPurpleText };
-    case 'BIO': return { bg: colors.bioOrangeLight, border: colors.bioOrange, text: colors.bioOrangeText };
-    case 'PHY': return { bg: colors.phyRedLight, border: colors.phyRed, text: colors.phyRedText };
-    case 'CHE': return { bg: colors.cheIndigoLight, border: colors.cheIndigo, text: colors.cheIndigoText };
-    case 'ENG': return { bg: colors.engTealLight, border: colors.engTeal, text: colors.engTealText };
-    default: return { bg: colors.otherGrayLight, border: colors.otherGray, text: colors.otherGrayText };
-  }
-};
-
-// Add back the missing CourseBadge component
-const CourseBadge = styled.span`
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: ${props => getDepartmentColors(props.course).text};
-  background-color: ${props => getDepartmentColors(props.course).bg};
-  border: 1px solid ${props => getDepartmentColors(props.course).border};
-  line-height: 1.2;
 `;
 
 // Add back the missing RemoveCourseBtn component
@@ -767,21 +769,21 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
     return [];
   }, [coursesData]);
   
-  // Helper to get course title
-  const getCourseTitle = (course) => {
+  // Helper to get course title - wrap in useCallback
+  const getCourseTitle = useCallback((course) => {
     if (coursesData?.courses?.[course]?.title) {
       return coursesData.courses[course].title;
     }
     return '';
-  };
+  }, [coursesData]);
   
-  // Helper to get instructors for a course
-  const getInstructorsForCourse = (course) => {
+  // Helper to get instructors for a course - wrap in useCallback
+  const getInstructorsForCourse = useCallback((course) => {
     if (coursesData?.courses?.[course]?.instructors) {
       return coursesData.courses[course].instructors;
     }
     return [];
-  };
+  }, [coursesData]);
   
   // Save constraints to localStorage
   const saveConstraints = (newConstraints) => {

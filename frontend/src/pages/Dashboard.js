@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { useQuery, useMutation } from '@tanstack/react-query';
 import ScheduleList from '../components/ScheduleList';
 import StatusPanel from '../components/StatusPanel';
 import CourseConstraintsForm from '../components/CourseConstraintsForm';
-import { fetchSchedules, generateSchedules } from '../utils/api';
 import api from '../utils/api';
 
 // Update colors to match the new design system
@@ -72,20 +70,6 @@ const SidePanel = styled.aside` // Changed to aside for semantics
 
   @media (max-width: 767px) {
     border-radius: 12px; // Slightly smaller radius on mobile
-  }
-`;
-
-const LoadingMessage = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px; // Reduced height for mobile
-  font-size: 1.1rem; // Slightly smaller
-  color: ${colors.textSecondary};
-  text-align: center;
-  
-  @media (min-width: 768px) {
-    min-height: 250px; // Original height on larger screens
   }
 `;
 
@@ -208,6 +192,7 @@ function Dashboard() {
   // Handle custom constraints submission
   const handleCustomConstraintsSubmit = async (constraints) => {
     setIsGenerating(true);
+    setIsLoading(true);
     setError(null);
     try {
       const response = await api.post('/schedules/generate', constraints);
@@ -219,6 +204,7 @@ function Dashboard() {
       setError(err.response?.data?.error || 'Failed to generate schedules');
     } finally {
       setIsGenerating(false);
+      setIsLoading(false);
     }
   };
 

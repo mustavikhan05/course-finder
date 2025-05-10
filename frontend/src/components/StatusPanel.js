@@ -104,20 +104,6 @@ const RefreshIndicator = styled.div`
   }
 `;
 
-// Info note
-const InfoNote = styled.div`
-  margin-top: 15px;
-  padding: 12px 15px;
-  background-color: ${colors.infoLight};
-  border-radius: 8px;
-  font-size: 0.85rem;
-  color: ${colors.infoText};
-  
-  strong {
-    font-weight: 600;
-  }
-`;
-
 // Simplified StatusPanel component
 function StatusPanel({ 
   lastUpdated, 

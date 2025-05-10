@@ -17,7 +17,6 @@ const colors = {
   error: '#FF5E78',
   success: '#38B2AC',
   warning: '#F6AD55',
-  border: '#E2E8F0',
 };
 
 const GlobalStyle = createGlobalStyle`

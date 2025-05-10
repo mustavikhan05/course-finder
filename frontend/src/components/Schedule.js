@@ -97,12 +97,6 @@ const NewBadge = styled.span`
   }
 `;
 
-const ScheduleScore = styled.div`
-  font-size: 0.9rem;
-  color: ${colors.textSecondary};
-  padding: 0 18px 10px; // Add padding if shown outside content
-`;
-
 const ScheduleActions = styled.div`
   display: flex;
   gap: 8px;
