@@ -80,13 +80,13 @@ This tool will help monitor course availability without needing to manually refr
 - Time in 12-hour format with AM/PM indicator
 
 - [x] Create function to fetch course page with proper headers and error handling (May 10, 2023)
-- [ ] Examine page HTML structure to identify course table elements
+- [x] Examine page HTML structure to identify course table elements (May 10, 2023)
 - [x] Implement HTML parsing function that extracts all courses into a DataFrame (May 10, 2023)
 - [x] Include columns: course_code, section, title, credit, day_time, room, instructor, seats (May 10, 2023)
 - [x] Add parsing for day/time format to extract days (ST, MW, etc.) and times separately (May 10, 2023)
 - [x] Create function to filter just the requested courses (BIO103, CSE327, etc.) (May 10, 2023)
 - [x] Add data cleaning functions to standardize extracted information (May 10, 2023)
-- [ ] Test scraper with sample page to verify extraction accuracy
+- [x] Test scraper with sample page to verify extraction accuracy (May 10, 2023)
 
 ## 2. Filter Implementation (`filters.py`)
 
@@ -145,6 +145,8 @@ This tool will help monitor course availability without needing to manually refr
 - [ ] Test with real NSU webpage to verify scraping works correctly
 - [x] Create test cases for various filter combinations (May 10, 2023)
 - [x] Add error handling for network issues or website changes (May 10, 2023)
+- [x] Create mock data for testing when actual website is unavailable (May 10, 2023)
+- [x] Test scraper with mock data to verify parsing logic (May 10, 2023)
 - [ ] Test full system operation for multiple refresh cycles
 - [ ] Refine display format based on actual data
 
