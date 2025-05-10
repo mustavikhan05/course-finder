@@ -171,9 +171,10 @@ This tool will help monitor course availability without needing to manually refr
 
 ## 6. Analysis & Diagnostic Tools
 
-- [x] Create export_raw_data.py to save raw course data to text files (May 15, 2023)
+- [x] Create export_raw_data.py to save target course data to text files (May 15, 2023)
 - [x] Develop analyze_sections.py to show detailed info about available sections (May 15, 2023)
 - [x] Implement check_lab_sections.py to diagnose CSE332/CSE332L pairing issues (May 15, 2023)
+- [x] Fix redundancy in export_raw_data.py (Now correctly exports only target courses data)
 - [ ] Create a comprehensive analysis report of scheduling constraints
 - [ ] Implement visualization of available sections and constraints
 
@@ -183,8 +184,8 @@ This tool will help monitor course availability without needing to manually refr
 
 2. **Partial Schedules**: The system now generates partial schedules with as many courses as possible when complete schedules cannot be found. This provides useful information about which subset of courses can be taken together.
 
-3. **Diagnostic Tools**: Three new utility scripts have been added to help diagnose issues:
-   - `export_raw_data.py`: Exports raw course data to text files for reference
+3. **Diagnostic Tools**: Three utility scripts have been added and refined to help diagnose issues:
+   - `export_raw_data.py`: Exports target course data to text files for reference
    - `analyze_sections.py`: Provides detailed analysis of available sections after filtering
    - `check_lab_sections.py`: Specifically diagnoses issues with CSE332/CSE332L section pairing
 

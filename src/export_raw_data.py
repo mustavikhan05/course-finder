@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Export raw course data to text files.
-This script exports both unfiltered and filtered data for target courses.
+Export target course data to text files.
+This script exports the target courses data from the NSU course offerings page.
 """
 
 import pandas as pd
@@ -16,17 +16,17 @@ from config.settings import TARGET_COURSES
 
 def export_raw_data():
     """
-    Fetch course data and export it to text files without any filtering.
+    Fetch target course data and export it to text files.
     """
-    print("Fetching course data...")
-    courses_df = fetch_course_data()
+    print("Fetching target course data...")
+    courses_df = fetch_course_data()  # This already returns only the target courses
     
     # Create data directory if it doesn't exist
     os.makedirs('data', exist_ok=True)
     
-    # Export all raw data
-    with open('data/all_raw_data.txt', 'w') as f:
-        f.write("ALL AVAILABLE COURSE SECTIONS (RAW DATA)\n")
+    # Export target courses raw data
+    with open('data/target_courses_raw.txt', 'w') as f:
+        f.write("TARGET COURSE SECTIONS (RAW DATA)\n")
         f.write("=" * 80 + "\n\n")
         
         for index, row in courses_df.iterrows():
@@ -34,20 +34,15 @@ def export_raw_data():
             f.write(f"Time: {row['start_time']} - {row['end_time']} | Instructor: {row['instructor']} | ")
             f.write(f"Room: {row['room']} | Seats: {row['seats']}\n")
     
-    print(f"All raw data exported to data/all_raw_data.txt")
+    print(f"Target courses raw data exported to data/target_courses_raw.txt")
     
-    # Filter for only target courses (without any other filtering)
-    target_courses_data = courses_df[courses_df['course_code'].isin(TARGET_COURSES) | 
-                                  courses_df['course_code'].str.contains('CSE332/EEE336', case=False, na=False) |
-                                  courses_df['course_code'].str.contains('CSE332L/EEE336L', case=False, na=False)]
-    
-    # Export target courses data
-    with open('data/target_courses_raw.txt', 'w') as f:
-        f.write("TARGET COURSE SECTIONS (RAW DATA, NO FILTERS)\n")
+    # Group by course code for better organization
+    with open('data/target_courses_grouped.txt', 'w') as f:
+        f.write("TARGET COURSE SECTIONS (GROUPED BY COURSE)\n")
         f.write("=" * 80 + "\n\n")
         
         # Group by course code for better organization
-        grouped = target_courses_data.groupby('course_code')
+        grouped = courses_df.groupby('course_code')
         for course_code, group in grouped:
             f.write(f"\n{course_code} - {len(group)} sections:\n")
             f.write("-" * 80 + "\n")
@@ -57,7 +52,7 @@ def export_raw_data():
                 f.write(f"Time: {row['start_time']} - {row['end_time']} | Instructor: {row['instructor']} | ")
                 f.write(f"Room: {row['room']} | Seats: {row['seats']}\n")
     
-    print(f"Target courses raw data exported to data/target_courses_raw.txt")
+    print(f"Target courses grouped data exported to data/target_courses_grouped.txt")
 
 if __name__ == "__main__":
     export_raw_data() 
