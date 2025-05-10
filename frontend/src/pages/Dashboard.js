@@ -46,6 +46,20 @@ const ErrorMessage = styled.div`
   padding: 15px;
   margin-bottom: 20px;
   color: #c00;
+  
+  h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+  
+  p {
+    margin-bottom: 5px;
+  }
+  
+  .suggestion {
+    margin-top: 10px;
+    font-style: italic;
+  }
 `;
 
 const SuccessMessage = styled.div`
@@ -269,7 +283,14 @@ function Dashboard() {
             </LoadingMessage>
           ) : isError && !customSchedulesData ? (
             <ErrorMessage>
-              Error {mode === 'default' ? 'loading' : 'generating'} schedules: {error?.message}
+              <h4>Error {mode === 'default' ? 'loading' : 'generating'} schedules</h4>
+              <p>{error?.message}</p>
+              {error?.message?.includes('timeout') && (
+                <p className="suggestion">
+                  The university website appears to be slow or unavailable. 
+                  Please try again later or switch to default schedules mode.
+                </p>
+              )}
             </ErrorMessage>
           ) : (
             <>

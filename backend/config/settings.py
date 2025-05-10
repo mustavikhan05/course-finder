@@ -42,9 +42,14 @@ MAX_SCHEDULES_TO_DISPLAY = 10
 
 # Request settings
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-REQUEST_TIMEOUT = 30  # seconds
+REQUEST_TIMEOUT = 60  # seconds - Increased from 30 to 60 for slower connections
 REQUEST_DELAY_MIN = 1.0  # seconds
 REQUEST_DELAY_MAX = 3.0  # seconds
+
+# Mock data setting
+# Set to True to use mock data instead of fetching from the university website
+# This is useful for development and testing when the website is unavailable
+USE_MOCK_DATA = False  # Change to True to use mock data
 
 # For compatibility with backend code
 COURSE_URL = NSU_COURSE_URL 
