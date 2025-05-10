@@ -296,7 +296,9 @@ The goal is to deploy the current version first and then add user input function
 
 - [x] Add error handling for invalid constraint combinations
 
-### 10.2 Frontend UI Components
+- [x] Test the API with a custom test script to verify functionality
+
+### 10.2 Frontend UI Components (In Progress)
 
 - [ ] Create a CourseConstraintsForm component:
   - Input fields for required courses
