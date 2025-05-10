@@ -706,7 +706,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
       start_time_constraint: "11:00 AM",
       day_pattern: ["ST", "MW"],
       exclude_evening_classes: true,
-      max_days: 5,
+      max_days: 4,
       instructor_preferences: {}
     };
   });
@@ -898,7 +898,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
       start_time_constraint: "11:00 AM",
       day_pattern: ["ST", "MW"],
       exclude_evening_classes: true,
-      max_days: 5,
+      max_days: 4,
       instructor_preferences: {}
     });
     setErrors({});
@@ -1021,7 +1021,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
           <CustomTimeSelector
             value={`${constraints.max_days} Days`}
             onChange={(value) => handleInputChange('max_days', parseInt(value.split(' ')[0]))}
-            options={["4 Days", "5 Days"]}
+            options={["2 Days", "3 Days", "4 Days", "5 Days", "6 Days"]}
           />
           <HelperText>Maximum number of different days you want to have classes</HelperText>
         </FormGroup>
