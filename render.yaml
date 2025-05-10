@@ -1,0 +1,29 @@
+# Render Blueprint
+services:
+  # Backend API Service
+  - type: web
+    name: nsu-scheduler-api
+    env: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn 'app:create_app()' --bind=0.0.0.0:$PORT
+    plan: free
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: true
+
+  # Frontend Static Site
+  - type: web
+    name: nsu-scheduler-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./build
+    plan: free
+    envVars:
+      - key: REACT_APP_API_URL
+        fromService:
+          type: web
+          name: nsu-scheduler-api
+          envVarKey: RENDER_EXTERNAL_URL
+        postfix: /api 
