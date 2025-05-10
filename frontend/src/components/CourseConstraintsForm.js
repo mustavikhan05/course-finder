@@ -681,6 +681,51 @@ const GlobalOverlay = styled.div`
   background-color: transparent;
 `;
 
+// Add back the missing getDepartmentColors function
+const getDepartmentColors = (course) => {
+  const dept = (course.match(/^([A-Z]{3})/) || [])[1];
+  switch (dept) {
+    case 'CSE': return { bg: colors.cseBlueLight, border: colors.cseBlue, text: colors.cseBlueText };
+    case 'EEE': return { bg: colors.eeeGreenLight, border: colors.eeeGreen, text: colors.eeeGreenText };
+    case 'MAT': return { bg: colors.matPurpleLight, border: colors.matPurple, text: colors.matPurpleText };
+    case 'BIO': return { bg: colors.bioOrangeLight, border: colors.bioOrange, text: colors.bioOrangeText };
+    case 'PHY': return { bg: colors.phyRedLight, border: colors.phyRed, text: colors.phyRedText };
+    case 'CHE': return { bg: colors.cheIndigoLight, border: colors.cheIndigo, text: colors.cheIndigoText };
+    case 'ENG': return { bg: colors.engTealLight, border: colors.engTeal, text: colors.engTealText };
+    default: return { bg: colors.otherGrayLight, border: colors.otherGray, text: colors.otherGrayText };
+  }
+};
+
+// Add back the missing CourseBadge component
+const CourseBadge = styled.span`
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: ${props => getDepartmentColors(props.course).text};
+  background-color: ${props => getDepartmentColors(props.course).bg};
+  border: 1px solid ${props => getDepartmentColors(props.course).border};
+  line-height: 1.2;
+`;
+
+// Add back the missing RemoveCourseBtn component
+const RemoveCourseBtn = styled.button`
+  background: none;
+  border: none;
+  color: currentColor; // Inherit color from CourseTag
+  opacity: 0.7;
+  margin-left: 6px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0 3px;
+  line-height: 1;
+  
+  &:hover {
+    opacity: 1;
+    color: ${colors.error};
+  }
+`;
+
 function CourseConstraintsForm({ onSubmit, isLoading }) {
   // Fetch available courses from API
   const {

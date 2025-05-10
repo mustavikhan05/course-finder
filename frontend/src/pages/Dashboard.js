@@ -7,20 +7,22 @@ import CourseConstraintsForm from '../components/CourseConstraintsForm';
 import { fetchSchedules, generateSchedules } from '../utils/api';
 import api from '../utils/api';
 
-// Use colors from App.js or define a similar palette if not directly accessible
-// For this example, I'll assume colors are accessible or redefined
+// Update colors to match the new design system
 const colors = {
-  primary: '#007bff',
-  primaryDark: '#0056b3',
-  background: '#f8f9fa',
+  primary: '#4361EE', // Vibrant blue
+  primaryDark: '#3A56D4',
+  primaryLight: '#D8E1FF',
+  secondary: '#FF5E78', // Hot pink accent
+  secondaryLight: '#FFD8DF',
   surface: '#ffffff',
-  text: '#212529',
-  textSecondary: '#6c757d',
-  error: '#dc3545',
-  success: '#28a745',
-  border: '#dee2e6',
-  errorLight: '#f8d7da',
-  successLight: '#d4edda',
+  background: '#f8f9fa',
+  text: '#2D3748', // Darker text for better contrast
+  textSecondary: '#718096',
+  border: '#E2E8F0',
+  error: '#FF5E78',
+  errorLight: '#FFD8DF',
+  success: '#38B2AC',
+  successLight: '#D0F2F0',
 };
 
 const DashboardContainer = styled.div`
@@ -34,11 +36,12 @@ const DashboardContainer = styled.div`
 `;
 
 const MainContent = styled.div`
-  background-color: ${colors.surface};
-  border-radius: 12px; // Softer radius
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08); // Softer shadow
+  background: linear-gradient(135deg, ${colors.surface} 0%, ${colors.primaryLight}20 100%);
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(67, 97, 238, 0.07), 0 5px 10px rgba(0, 0, 0, 0.05);
   padding: 25px;
   order: 2; // Display after SidePanel on mobile
+  border: 1px solid ${colors.primaryLight};
 
   @media (min-width: 992px) {
     order: 1; // Restore original order on larger screens
@@ -46,17 +49,19 @@ const MainContent = styled.div`
 
   @media (max-width: 767px) {
     padding: 20px;
-    border-radius: 10px; // Slightly smaller radius on mobile
+    border-radius: 12px; // Slightly smaller radius on mobile
   }
 `;
 
 const SidePanel = styled.aside` // Changed to aside for semantics
-  background-color: ${colors.surface};
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  padding: 25px;
+  background: linear-gradient(135deg, ${colors.surface} 0%, ${colors.primaryLight} 100%);
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(67, 97, 238, 0.07), 0 5px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid ${colors.primaryLight};
+  padding: 0; // No padding since StatusPanel has its own
   position: static; // Start with static positioning
   order: 1; // Display before MainContent on mobile
+  overflow: hidden;
   
   @media (min-width: 992px) {
     position: sticky; // Make side panel sticky on larger screens
@@ -66,8 +71,7 @@ const SidePanel = styled.aside` // Changed to aside for semantics
   }
 
   @media (max-width: 767px) {
-    padding: 20px;
-    border-radius: 10px; // Slightly smaller radius on mobile
+    border-radius: 12px; // Slightly smaller radius on mobile
   }
 `;
 
@@ -115,23 +119,25 @@ const ErrorMessage = styled(MessageCardBase)`
   background-color: ${colors.errorLight};
   border-color: ${colors.error};
   color: ${colors.error};
+  box-shadow: 0 5px 15px rgba(255, 94, 120, 0.1);
 
   h4 {
     color: ${colors.error};
   }
   
   p, .suggestion strong {
-    color: #721c24; // Darker red for better contrast on light red background
+    color: #9B2C3D; // Darker red for better contrast on light red background
   }
 `;
 
 const SuccessMessage = styled(MessageCardBase)`
   background-color: ${colors.successLight};
   border-color: ${colors.success};
-  color: #155724; // Darker green for better contrast
+  color: #1F6D68; // Darker green for better contrast
+  box-shadow: 0 5px 15px rgba(56, 178, 172, 0.1);
 
   h4 {
-    color: #155724;
+    color: #1F6D68;
   }
 `;
 
@@ -162,7 +168,7 @@ const FloatingButton = styled.button`
   background-color: ${colors.primary};
   color: white;
   border: none;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 3px 10px rgba(67, 97, 238, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -171,7 +177,8 @@ const FloatingButton = styled.button`
   
   &:hover {
     transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    background-color: ${colors.primaryDark};
+    box-shadow: 0 5px 15px rgba(67, 97, 238, 0.5);
   }
   
   svg {
@@ -280,10 +287,7 @@ function Dashboard() {
           <StatusPanel 
             lastUpdated={lastUpdated}
             totalSchedules={schedules.length}
-            stats={schedules.length > 0 ? schedules[0].stats : {}}
             isLoading={isLoading || isGenerating}
-            showingEveningClasses={true} // Adjust based on your state
-            mode="custom"
           />
         </SidePanel>
       </DashboardContainer>
