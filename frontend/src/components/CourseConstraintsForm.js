@@ -618,7 +618,7 @@ const TimeOption = styled.div`
 `;
 
 // A custom time selector component with update for global overlay
-const CustomTimeSelector = ({ value, onChange, options, onOpenCallback }) => {
+const CustomTimeSelector = ({ value, onChange, options, onOpenCallback, globalOverlayVisible }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
   
@@ -642,10 +642,10 @@ const CustomTimeSelector = ({ value, onChange, options, onOpenCallback }) => {
   
   // Close dropdown when global overlay is clicked
   useEffect(() => {
-    if (!showGlobalOverlay && showDropdown) {
+    if (!globalOverlayVisible && showDropdown) {
       setShowDropdown(false);
     }
-  }, [showGlobalOverlay]);
+  }, [globalOverlayVisible]);
   
   return (
     <TimeSelector ref={dropdownRef}>
@@ -1074,6 +1074,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
               onChange={(value) => handleInputChange('start_time_constraint', value)}
               options={TIME_OPTIONS}
               onOpenCallback={handleTimeDropdownShow}
+              globalOverlayVisible={showGlobalOverlay}
             />
             <HelperText>Classes will not start before this time</HelperText>
           </FormGroup>
@@ -1085,6 +1086,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
               onChange={(value) => handleInputChange('max_days', parseInt(value.split(' ')[0]))}
               options={["2 Days", "3 Days", "4 Days", "5 Days", "6 Days"]}
               onOpenCallback={handleTimeDropdownShow}
+              globalOverlayVisible={showGlobalOverlay}
             />
             <HelperText>Maximum number of different days you want to have classes</HelperText>
           </FormGroup>
