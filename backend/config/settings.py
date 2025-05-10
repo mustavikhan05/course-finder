@@ -46,10 +46,5 @@ REQUEST_TIMEOUT = 60  # seconds - Increased from 30 to 60 for slower connections
 REQUEST_DELAY_MIN = 1.0  # seconds
 REQUEST_DELAY_MAX = 3.0  # seconds
 
-# Mock data setting
-# Set to True to use mock data instead of fetching from the university website
-# This is useful for development and testing when the website is unavailable
-USE_MOCK_DATA = False  # Change to True to use mock data
-
 # For compatibility with backend code
 COURSE_URL = NSU_COURSE_URL 

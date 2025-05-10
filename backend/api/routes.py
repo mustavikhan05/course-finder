@@ -193,26 +193,8 @@ def generate_custom_schedules():
                 'timestamp': time.time()
             }), 400
         
-        try:
-            # Fetch course data
-            courses_df = fetch_course_data()
-        except Exception as fetch_error:
-            error_msg = str(fetch_error)
-            if 'timeout' in error_msg.lower():
-                return jsonify({
-                    'error': f'University website connection timeout. The server may be slow or unavailable. Details: {error_msg}',
-                    'timestamp': time.time()
-                }), 504  # Gateway Timeout status
-            elif 'connection' in error_msg.lower():
-                return jsonify({
-                    'error': f'Could not connect to university website. Please try again later. Details: {error_msg}',
-                    'timestamp': time.time()
-                }), 502  # Bad Gateway status
-            else:
-                return jsonify({
-                    'error': f'Error fetching course data: {error_msg}',
-                    'timestamp': time.time()
-                }), 500
+        # Fetch course data
+        courses_df = fetch_course_data()
         
         # Filter courses based on user constraints
         filtered_df = apply_filters(
