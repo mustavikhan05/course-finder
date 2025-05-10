@@ -179,6 +179,181 @@ Workflow:
 
 The system is now fully functional for monitoring available course sections and finding optimal schedules that meet all 12 hard constraints, ranked according to the 3 soft preferences. Both CLI and Web interfaces are operational, with the web interface offering additional features like favorites and filtering.
 
+## 9. Deployment Plan for Render
+
+The goal is to deploy the current version first and then add user input functionality later.
+
+### 9.1 Backend Deployment on Render
+
+- [ ] Update backend/requirements.txt to include all dependencies
+  ```
+  flask==2.0.1
+  flask-cors==3.0.10
+  beautifulsoup4==4.10.0
+  pandas==1.3.3
+  requests==2.26.0
+  schedule==1.1.0
+  gunicorn==20.1.0
+  ```
+
+- [ ] Create a Procfile in the backend directory
+  ```
+  web: gunicorn 'app:create_app()' --bind=0.0.0.0:$PORT
+  ```
+
+- [ ] Sign up for Render (https://render.com/) if you haven't already
+
+- [ ] Create a new Web Service on Render:
+  - Connect your GitHub repository
+  - Name: nsu-scheduler-api
+  - Root Directory: backend
+  - Environment: Python 3
+  - Build Command: `pip install -r requirements.txt`
+  - Start Command: `gunicorn 'app:create_app()' --bind=0.0.0.0:$PORT`
+  - Plan: Free
+
+- [ ] Configure environment variables on Render (if needed):
+  - NSU_COURSE_URL: URL for the NSU course offerings page
+  - REFRESH_INTERVAL: Time between data refreshes in seconds
+
+- [ ] Test the backend API after deployment:
+  - Visit https://nsu-scheduler-api.onrender.com/api/status
+  - Verify it returns proper status JSON
+
+### 9.2 Frontend Deployment on Render
+
+- [ ] Update the API base URL in frontend/src/utils/api.js:
+  ```javascript
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://nsu-scheduler-api.onrender.com/api';
+  ```
+
+- [ ] Create a new Static Site on Render:
+  - Connect your GitHub repository
+  - Name: nsu-scheduler-frontend
+  - Root Directory: frontend
+  - Build Command: `npm install && npm run build`
+  - Publish Directory: build
+  - Environment Variables:
+    - REACT_APP_API_URL: https://nsu-scheduler-api.onrender.com/api
+
+- [ ] Test the deployed frontend:
+  - Visit the URL provided by Render
+  - Verify it connects to the backend
+  - Test toggling evening classes
+  - Try saving a favorite schedule
+
+### 9.3 Backend CORS Configuration
+
+- [ ] Update the CORS configuration in backend/app.py:
+  ```python
+  # Add your frontend URL to the allowed origins
+  CORS(app, origins=["https://nsu-scheduler-frontend.onrender.com"])
+  ```
+
+- [ ] Redeploy the backend to apply changes
+
+### 9.4 Setup Automatic Deployment
+
+- [ ] Configure GitHub repository to auto-deploy on push:
+  - Set up webhook from GitHub to Render
+  - Test by making a small change and pushing to GitHub
+  - Verify both backend and frontend update automatically
+
+### 9.5 Monitor and Troubleshoot
+
+- [ ] Set up Render dashboard monitoring
+- [ ] Check logs for any errors
+- [ ] Monitor response times and performance
+- [ ] Test the application thoroughly after deployment
+
+## 10. User Input Interface Implementation (Future Enhancement)
+
+### 10.1 Backend API Enhancements
+
+- [ ] Create a new endpoint for dynamic schedule generation:
+  ```
+  POST /api/schedules/generate
+  ```
+
+- [ ] Implement request validation for user constraints:
+  - Required courses list
+  - Time restrictions
+  - Day pattern preferences
+  - Instructor preferences
+  - Maximum days
+  - Evening class preferences
+
+- [ ] Modify the filter and scheduler modules to accept dynamic constraints:
+  - Update apply_filters() to accept parameters from request
+  - Update generate_schedules() to work with custom course lists
+  - Ensure all constraints are properly validated
+
+- [ ] Add error handling for invalid constraint combinations
+
+### 10.2 Frontend UI Components
+
+- [ ] Create a CourseConstraintsForm component:
+  - Input fields for required courses
+  - Dropdowns for time restrictions
+  - Checkboxes for day pattern preferences
+  - Input for specific instructor requirements
+  - Toggle for evening classes
+  - Slider for maximum days per week
+
+- [ ] Implement form validation:
+  - Ensure required fields are filled
+  - Validate course codes against a known list
+  - Show helpful error messages
+
+- [ ] Update Dashboard component:
+  - Add the constraints form at the top
+  - Add a "Generate Schedules" button
+  - Show loading state during API calls
+  - Display error messages if generation fails
+
+- [ ] Implement state management for user constraints:
+  - Save form values to localStorage
+  - Restore values when the page loads
+  - Reset button to clear all constraints
+
+### 10.3 API Integration
+
+- [ ] Update the fetchSchedules function in api.js:
+  ```javascript
+  export const fetchSchedules = async (constraints) => {
+    try {
+      const response = await api.post('/schedules/generate', constraints);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching schedules:', error);
+      throw new Error('Failed to fetch schedules. Please try again later.');
+    }
+  };
+  ```
+
+- [ ] Add loading and error states to the React Query hook:
+  ```javascript
+  const { data, error, isLoading, isError, dataUpdatedAt } = useQuery({
+    queryKey: ['schedules', constraints],
+    queryFn: () => fetchSchedules(constraints),
+    enabled: !!constraints, // Only run query when constraints are provided
+  });
+  ```
+
+### 10.4 Testing and Refinement
+
+- [ ] Test with various constraint combinations
+- [ ] Fix edge cases and unexpected inputs
+- [ ] Add helpful prompts and tooltips for better user experience
+- [ ] Implement error recovery strategies
+
+### 10.5 Deployment Updates
+
+- [ ] Deploy backend changes to Render
+- [ ] Update frontend with new components
+- [ ] Test end-to-end flow with real user inputs
+- [ ] Gather feedback and iterate on the design
+
 ## How to Run the Application
 
 ### Running the CLI Interface

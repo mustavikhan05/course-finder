@@ -27,8 +27,8 @@ def create_app(test_config=None):
     # Create the Flask app
     app = Flask(__name__, instance_relative_config=True)
     
-    # Enable CORS for all routes
-    CORS(app)
+    # Enable CORS for all routes, specifically allowing the Render frontend domain
+    CORS(app, origins=["https://nsu-scheduler-frontend.onrender.com", "http://localhost:3000"])
     
     # Set up logging
     logging.basicConfig(
