@@ -38,6 +38,7 @@ const FormContainer = styled.form`
 
   @media (max-width: 767px) {
     padding: 20px;
+    border-radius: 10px; // Slightly smaller radius on mobile
   }
 `;
 
@@ -47,10 +48,44 @@ const FormTitle = styled.h3`
   border-bottom: 1px solid ${colors.border};
   padding-bottom: 15px;
   margin-bottom: 25px;
+  
+  @media (max-width: 480px) {
+    font-size: 1.2rem;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+  }
+`;
+
+const FormSectionTitle = styled.h4`
+  font-size: 1.1rem;
+  color: ${colors.text};
+  margin-top: 30px;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed ${colors.border};
+`;
+
+const FormGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr; // Single column on mobile
+    gap: 15px;
+  }
 `;
 
 const FormGroup = styled.div`
   margin-bottom: 20px;
+  
+  // Add a subtle fade-in animation for form elements
+  animation: fadeIn 0.4s ease-in-out;
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 `;
 
 const Label = styled.label`
@@ -85,16 +120,26 @@ const inputStyles = `
 
 const Input = styled.input`
   ${inputStyles}
+  height: 44px; // Taller input for better touch targets
+  
+  @media (max-width: 480px) {
+    height: 48px; // Even taller on very small screens
+  }
 `;
 
 const Select = styled.select`
   ${inputStyles}
+  height: 44px; // Taller select for better touch targets
   appearance: none; // Custom arrow will be needed or use a library
   background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23${colors.textSecondary.substring(1)}%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E');
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 10px;
   padding-right: 30px; // Make space for arrow
+  
+  @media (max-width: 480px) {
+    height: 48px; // Even taller on very small screens
+  }
 `;
 
 const CheckboxContainer = styled.div`
@@ -111,20 +156,100 @@ const CheckboxLabel = styled.label`
   user-select: none;
   font-size: 0.9rem;
   color: ${colors.text};
-`;
-
-const Checkbox = styled.input.attrs({ type: 'checkbox' })`
-  margin-right: 8px;
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: ${colors.primary};
-
-  &:focus {
-    outline: 2px solid ${colors.inputFocusBorder};
-    outline-offset: 1px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: ${colors.background};
+  }
+  
+  @media (max-width: 480px) {
+    width: 100%; // Full width on very small screens
+    padding: 12px; // Larger touch target
   }
 `;
+
+// Replace old checkbox with toggle switch
+const ToggleSwitch = styled.div`
+  position: relative;
+  width: 48px;
+  height: 24px;
+  margin-right: 12px;
+  
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+    
+    &:checked + span {
+      background-color: ${colors.primary};
+    }
+    
+    &:checked + span:before {
+      transform: translateX(24px);
+    }
+    
+    &:focus + span {
+      box-shadow: 0 0 0 2px ${colors.inputFocusShadow};
+    }
+  }
+  
+  span {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: ${colors.disabledBg};
+    transition: .3s ease;
+    border-radius: 34px;
+    
+    &:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .3s ease;
+      border-radius: 50%;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    width: 52px; // Slightly larger on mobile
+    height: 26px;
+    
+    span:before {
+      height: 22px;
+      width: 22px;
+    }
+    
+    input:checked + span:before {
+      transform: translateX(26px);
+    }
+  }
+`;
+
+// Replace old Checkbox component with modern toggle
+const DayPatternCheckbox = ({ id, checked, onChange, children }) => (
+  <CheckboxLabel htmlFor={id}>
+    <ToggleSwitch>
+      <input
+        id={id}
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+      />
+      <span></span>
+    </ToggleSwitch>
+    {children}
+  </CheckboxLabel>
+);
 
 const CoursesTagInput = styled.div`
   display: flex;
@@ -218,22 +343,26 @@ const ButtonGroup = styled.div`
   display: flex;
   flex-wrap: wrap; // Allow buttons to wrap
   justify-content: space-between;
-  gap: 10px; // Add gap for wrapped buttons
-  margin-top: 30px;
+  gap: 15px; // Increased gap for better touch separation
+  margin-top: 35px; // More space above buttons
+  
+  @media (max-width: 480px) {
+    flex-direction: column; // Stack buttons on very small screens
+  }
 `;
 
 const Button = styled.button`
-  padding: 12px 20px;
-  border-radius: 6px;
+  padding: 14px 24px; // Larger padding for better touch targets
+  border-radius: 8px; // Slightly more rounded
   border: none;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 1rem; // Slightly larger font
   cursor: pointer;
   transition: all 0.2s ease;
-  flex-grow: 1; // Allow buttons to grow
-
-  @media (min-width: 500px) {
-    flex-grow: 0; // Don't grow on larger screens if space-between is enough
+  
+  @media (max-width: 480px) {
+    width: 100%; // Full width on mobile
+    padding: 16px 24px; // Even larger on mobile
   }
   
   &:disabled {
@@ -372,6 +501,11 @@ const DAY_PATTERNS = [
   { value: "MW", label: "Monday-Wednesday (MW)" },
   { value: "RA", label: "Thursday-Saturday (RA)" }
 ];
+
+// Update the Checkbox styled component for evening classes toggle
+const EveningClassesToggle = styled(ToggleSwitch)`
+  // Any special styling for evening classes toggle
+`;
 
 function CourseConstraintsForm({ onSubmit, isLoading }) {
   // Fetch available courses from API
@@ -630,6 +764,7 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
         </ErrorIndicator>
       )}
       
+      <FormSectionTitle>Course Selection</FormSectionTitle>
       <FormGroup>
         <Label htmlFor="required_courses">Select Your Courses:</Label>
         <CoursesTagInput>
@@ -674,57 +809,64 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
         {errors.required_courses && <ErrorText>{errors.required_courses}</ErrorText>}
       </FormGroup>
       
-      <FormGroup>
-        <Label htmlFor="start_time">Earliest Class Start Time:</Label>
-        <Select
-          id="start_time"
-          value={constraints.start_time_constraint}
-          onChange={(e) => handleInputChange('start_time_constraint', e.target.value)}
-        >
-          {TIME_OPTIONS.map(time => (
-            <option key={time} value={time}>{time}</option>
-          ))}
-        </Select>
-        <HelperText>Classes will not start before this time</HelperText>
-      </FormGroup>
+      <FormSectionTitle>Schedule Preferences</FormSectionTitle>
+      <FormGrid>
+        <FormGroup>
+          <Label htmlFor="start_time">Earliest Class Start Time:</Label>
+          <Select
+            id="start_time"
+            value={constraints.start_time_constraint}
+            onChange={(e) => handleInputChange('start_time_constraint', e.target.value)}
+          >
+            {TIME_OPTIONS.map(time => (
+              <option key={time} value={time}>{time}</option>
+            ))}
+          </Select>
+          <HelperText>Classes will not start before this time</HelperText>
+        </FormGroup>
+        
+        <FormGroup>
+          <Label>Maximum Days per Week:</Label>
+          <Select
+            value={constraints.max_days}
+            onChange={(e) => handleInputChange('max_days', parseInt(e.target.value))}
+          >
+            <option value="4">4 Days</option>
+            <option value="5">5 Days</option>
+          </Select>
+          <HelperText>Maximum number of different days you want to have classes</HelperText>
+        </FormGroup>
+      </FormGrid>
       
       <FormGroup>
         <Label>Preferred Day Patterns:</Label>
         <CheckboxContainer>
           {DAY_PATTERNS.map(pattern => (
-            <CheckboxLabel key={pattern.value}>
-              <Checkbox
-                type="checkbox"
-                checked={constraints.day_pattern.includes(pattern.value)}
-                onChange={(e) => handleDayPatternChange(pattern.value, e.target.checked)}
-              />
+            <DayPatternCheckbox
+              key={pattern.value}
+              id={`pattern-${pattern.value}`}
+              checked={constraints.day_pattern.includes(pattern.value)}
+              onChange={(e) => handleDayPatternChange(pattern.value, e.target.checked)}
+            >
               {pattern.label}
-            </CheckboxLabel>
+            </DayPatternCheckbox>
           ))}
         </CheckboxContainer>
         <HelperText>Select which day patterns you prefer for your classes</HelperText>
       </FormGroup>
       
       <FormGroup>
-        <Label>Maximum Days per Week:</Label>
-        <Select
-          value={constraints.max_days}
-          onChange={(e) => handleInputChange('max_days', parseInt(e.target.value))}
-        >
-          <option value="4">4 Days</option>
-          <option value="5">5 Days</option>
-        </Select>
-        <HelperText>Maximum number of different days you want to have classes</HelperText>
-      </FormGroup>
-      
-      <FormGroup>
         <Label>Evening Classes:</Label>
-        <CheckboxLabel>
-          <Checkbox 
-            type="checkbox"
-            checked={!constraints.exclude_evening_classes}
-            onChange={(e) => handleInputChange('exclude_evening_classes', !e.target.checked)}
-          />
+        <CheckboxLabel htmlFor="evening-classes">
+          <EveningClassesToggle>
+            <input
+              id="evening-classes"
+              type="checkbox"
+              checked={!constraints.exclude_evening_classes}
+              onChange={(e) => handleInputChange('exclude_evening_classes', !e.target.checked)}
+            />
+            <span></span>
+          </EveningClassesToggle>
           Include classes starting at or after 6:00 PM
         </CheckboxLabel>
       </FormGroup>

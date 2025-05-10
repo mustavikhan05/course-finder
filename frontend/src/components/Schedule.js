@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 
 // Assuming colors are accessible or redefined
@@ -23,13 +23,18 @@ const colors = {
 const ScheduleCard = styled.div`
   background-color: ${props => props.isNew ? colors.warningLight : colors.surface};
   border: 1px solid ${props => props.isNew ? colors.warning : colors.border};
-  border-radius: 10px; // Slightly more pronounced radius
+  border-radius: 12px; // More consistent with design system
   overflow: hidden;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.07); // Softer, slightly larger shadow
-  transition: box-shadow 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08); // More subtle shadow
+  transition: all 0.3s ease;
 
   &:hover {
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+  }
+  
+  @media (max-width: 768px) {
+    border-radius: 10px; // Slightly smaller radius on mobile
   }
 `;
 
@@ -37,9 +42,13 @@ const ScheduleHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 18px;
+  padding: 16px 20px; // Increased padding
   background-color: ${props => props.isNew ? colors.warningLight : colors.lightGray};
   border-bottom: 1px solid ${props => props.isNew ? colors.warning : colors.border};
+  
+  @media (max-width: 480px) {
+    padding: 14px 16px; // Slightly reduced padding on smaller screens
+  }
 `;
 
 const ScheduleTitle = styled.h3`
@@ -49,6 +58,26 @@ const ScheduleTitle = styled.h3`
   font-weight: 600;
   display: flex;
   align-items: center;
+  flex-wrap: wrap; // Allow wrapping on small screens
+  
+  @media (max-width: 480px) {
+    font-size: 1.1rem;
+  }
+`;
+
+const ScoreBadge = styled.span`
+  background-color: ${colors.primary};
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+  margin-left: 10px;
+  
+  @media (max-width: 480px) {
+    margin-left: 8px;
+    padding: 2px 6px;
+  }
 `;
 
 const NewBadge = styled.span`
@@ -61,6 +90,11 @@ const NewBadge = styled.span`
   margin-left: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  
+  @media (max-width: 480px) {
+    margin-left: 8px;
+    padding: 2px 6px;
+  }
 `;
 
 const ScheduleScore = styled.div`
@@ -98,16 +132,60 @@ const ActionButton = styled.button`
 `;
 
 const ScheduleContent = styled.div`
-  padding: ${props => props.isExpanded ? '18px' : '0 18px'}; // Consistent horizontal padding
-  max-height: ${props => props.isExpanded ? '1200px' : '0'}; // Increased max-height
-  overflow: ${props => props.isExpanded ? 'auto' : 'hidden'}; // Allow scroll if content too long
-  transition: max-height 0.35s ease-in-out, padding 0.35s ease-in-out;
+  padding: ${props => props.isExpanded ? '20px' : '0'};
+  max-height: ${props => props.isExpanded ? '1500px' : '0'}; // Increased max-height
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); // More natural easing
   border-top: ${props => props.isExpanded ? `1px solid ${colors.border}` : 'none'};
+  
+  @media (max-width: 480px) {
+    padding: ${props => props.isExpanded ? '16px 12px' : '0'};
+  }
 `;
 
 const CourseTableWrapper = styled.div`
-  overflow-x: auto; // Enable horizontal scrolling for the table on small screens
+  overflow-x: auto; // Enable horizontal scrolling for mobile
   width: 100%;
+  
+  /* Add visual indicator for horizontal scroll */
+  background-image: ${props => props.hasScroll ? 'linear-gradient(to right, transparent 70%, rgba(0,0,0,0.05))' : 'none'};
+  background-size: 20px 100%;
+  background-repeat: no-repeat;
+  background-position: right center;
+  
+  /* Custom scrollbar for better UX */
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: ${colors.lightGray};
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: ${colors.mediumGray};
+    border-radius: 3px;
+  }
+  
+  @media (max-width: 768px) {
+    &::after {
+      content: "→";
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      color: ${colors.textSecondary};
+      opacity: 0.5;
+      font-size: 1.2rem;
+      pointer-events: none;
+      animation: fadeInOut 1.5s infinite alternate;
+    }
+    
+    @keyframes fadeInOut {
+      from { opacity: 0.2; }
+      to { opacity: 0.7; }
+    }
+  }
 `;
 
 const CourseTable = styled.table`
@@ -116,9 +194,18 @@ const CourseTable = styled.table`
   font-size: 0.9rem;
   
   th, td {
-    padding: 12px 10px; // Adjusted padding
+    padding: 12px 10px; // Keep consistent padding
     text-align: left;
     vertical-align: middle;
+  }
+  
+  @media (max-width: 768px) {
+    font-size: 0.85rem; // Slightly smaller text on mobile
+    
+    th, td {
+      padding: 10px 8px; // Slightly smaller padding on mobile
+      white-space: nowrap; // Prevent text wrapping on mobile
+    }
   }
 `;
 
@@ -179,10 +266,46 @@ const SeatsCell = styled.td`
 const CourseCodeCell = styled.td`
   font-weight: 600;
   color: ${colors.primary};
+  position: relative;
+  
+  /* Subtle department indicator based on course code */
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: ${props => {
+      const dept = (props.children || '').substring(0, 3);
+      switch(dept) {
+        case 'CSE': return '#007bff';
+        case 'EEE': return '#28a745';
+        case 'PHY': return '#dc3545';
+        case 'CHE': return '#6610f2';
+        case 'MAT': return '#6f42c1';
+        case 'BIO': return '#fd7e14';
+        case 'ENG': return '#20c997';
+        default: return '#6c757d';
+      }
+    }};
+  }
+  
+  padding-left: 15px; // Make space for the department indicator
 `;
 
 function Schedule({ schedule, index, isFavorite, onToggleFavorite }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [hasScroll, setHasScroll] = useState(false);
+  const tableWrapperRef = useRef(null);
+  
+  // Check if table has horizontal scroll
+  useEffect(() => {
+    if (isExpanded && tableWrapperRef.current) {
+      const { scrollWidth, clientWidth } = tableWrapperRef.current;
+      setHasScroll(scrollWidth > clientWidth);
+    }
+  }, [isExpanded]);
   
   // Group courses by day
   const coursesByDay = {};
@@ -199,9 +322,7 @@ function Schedule({ schedule, index, isFavorite, onToggleFavorite }) {
         <ScheduleTitle>
           Schedule #{index + 1}
           {schedule.score !== undefined && (
-            <span style={{fontSize: '0.8rem', color: colors.textSecondary, marginLeft: '10px', fontWeight: 400}}>
-              (Score: {schedule.score})
-            </span>
+            <ScoreBadge>Score: {schedule.score}</ScoreBadge>
           )}
           {schedule.is_new && <NewBadge>New</NewBadge>}
         </ScheduleTitle>
@@ -211,6 +332,7 @@ function Schedule({ schedule, index, isFavorite, onToggleFavorite }) {
             active={isFavorite}
             onClick={() => onToggleFavorite(index)}
             title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
           >
             {isFavorite ? (
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
@@ -223,7 +345,12 @@ function Schedule({ schedule, index, isFavorite, onToggleFavorite }) {
             )}
           </ActionButton>
           
-          <ActionButton onClick={() => setIsExpanded(!isExpanded)} title="Expand/collapse">
+          <ActionButton 
+            onClick={() => setIsExpanded(!isExpanded)} 
+            title={isExpanded ? "Collapse" : "Expand"}
+            aria-label={isExpanded ? "Collapse" : "Expand"}
+            aria-expanded={isExpanded}
+          >
             {isExpanded ? (
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/>
@@ -238,7 +365,7 @@ function Schedule({ schedule, index, isFavorite, onToggleFavorite }) {
       </ScheduleHeader>
       
       <ScheduleContent isExpanded={isExpanded}>
-        <CourseTableWrapper>
+        <CourseTableWrapper ref={tableWrapperRef} hasScroll={hasScroll}>
           <CourseTable>
             <TableHead>
               <tr>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import ScheduleList from '../components/ScheduleList';
@@ -28,11 +28,7 @@ const DashboardContainer = styled.div`
   grid-template-columns: 1fr; // Mobile-first: single column
   gap: 25px; // Increased gap
   
-  @media (min-width: 768px) { // Tablet and above
-    grid-template-columns: 2fr 1fr; // Adjust ratio if needed
-  }
-
-  @media (min-width: 1024px) { // Desktop
+  @media (min-width: 992px) { // Increased breakpoint for better mobile/tablet experience
     grid-template-columns: 3fr 1fr;
   }
 `;
@@ -42,9 +38,15 @@ const MainContent = styled.div`
   border-radius: 12px; // Softer radius
   box-shadow: 0 4px 12px rgba(0,0,0,0.08); // Softer shadow
   padding: 25px;
+  order: 2; // Display after SidePanel on mobile
+
+  @media (min-width: 992px) {
+    order: 1; // Restore original order on larger screens
+  }
 
   @media (max-width: 767px) {
     padding: 20px;
+    border-radius: 10px; // Slightly smaller radius on mobile
   }
 `;
 
@@ -53,13 +55,19 @@ const SidePanel = styled.aside` // Changed to aside for semantics
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   padding: 25px;
-  position: sticky; // Make side panel sticky on larger screens
-  top: 20px; // Adjust as needed based on header height
-  height: fit-content; // Only take up necessary height
+  position: static; // Start with static positioning
+  order: 1; // Display before MainContent on mobile
+  
+  @media (min-width: 992px) {
+    position: sticky; // Make side panel sticky on larger screens
+    top: 20px; // Adjust as needed based on header height
+    height: fit-content; // Only take up necessary height
+    order: 2; // Restore original order on larger screens
+  }
 
   @media (max-width: 767px) {
-    position: static; // Not sticky on mobile
     padding: 20px;
+    border-radius: 10px; // Slightly smaller radius on mobile
   }
 `;
 
@@ -67,10 +75,14 @@ const LoadingMessage = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 250px; // Adjusted height
+  min-height: 200px; // Reduced height for mobile
   font-size: 1.1rem; // Slightly smaller
   color: ${colors.textSecondary};
   text-align: center;
+  
+  @media (min-width: 768px) {
+    min-height: 250px; // Original height on larger screens
+  }
 `;
 
 const MessageCardBase = styled.div`
@@ -130,6 +142,44 @@ const LastUpdated = styled.div`
   text-align: right;
 `;
 
+const FloatingControls = styled.div`
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+  display: flex;
+  gap: 10px;
+  
+  @media (min-width: 992px) {
+    display: none; // Hide on larger screens
+  }
+`;
+
+const FloatingButton = styled.button`
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: ${colors.primary};
+  color: white;
+  border: none;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+  
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+`;
+
 function Dashboard() {
   // State for favorite schedules
   const [favorites, setFavorites] = useState(() => {
@@ -144,6 +194,9 @@ function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showCustomSuccess, setShowCustomSuccess] = useState(false);
+
+  // Add state for mobile scrolling
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   // Handle custom constraints submission
   const handleCustomConstraintsSubmit = async (constraints) => {
@@ -171,6 +224,24 @@ function Dashboard() {
     localStorage.setItem('favoriteSchedules', JSON.stringify(newFavorites));
   };
 
+  // Add scroll event listener to show/hide back to top button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 300);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  // Function to scroll back to top
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <>
       <CourseConstraintsForm 
@@ -190,16 +261,41 @@ function Dashboard() {
         </ErrorMessage>
       )}
       
-      <ScheduleList
-        schedules={schedules}
-        favorites={favorites}
-        onToggleFavorite={toggleFavorite}
-      />
+      <DashboardContainer>
+        <MainContent>
+          <ScheduleList
+            schedules={schedules}
+            favorites={favorites}
+            onToggleFavorite={toggleFavorite}
+          />
+          
+          {lastUpdated && (
+            <LastUpdated>
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </LastUpdated>
+          )}
+        </MainContent>
+        
+        <SidePanel>
+          <StatusPanel 
+            lastUpdated={lastUpdated}
+            totalSchedules={schedules.length}
+            stats={schedules.length > 0 ? schedules[0].stats : {}}
+            isLoading={isLoading || isGenerating}
+            showingEveningClasses={true} // Adjust based on your state
+            mode="custom"
+          />
+        </SidePanel>
+      </DashboardContainer>
       
-      {lastUpdated && (
-        <LastUpdated>
-          Last updated: {lastUpdated.toLocaleTimeString()}
-        </LastUpdated>
+      {showBackToTop && (
+        <FloatingControls>
+          <FloatingButton onClick={scrollToTop} aria-label="Scroll to top">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
+            </svg>
+          </FloatingButton>
+        </FloatingControls>
       )}
     </>
   );

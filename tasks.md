@@ -512,3 +512,35 @@ Both implementations use the same core logic (scraper.py, filters.py, scheduler.
    - [ ] Separate deployments for easier maintenance
 
 Implementation will leverage modern React patterns and hooks to create a clean, responsive UI that clearly displays seat availability changes in real-time while maintaining simplicity.
+
+## 12. UI/UX Improvements
+
+### 12.1 Mobile Experience Enhancement
+- [x] Implement responsive viewport settings to prevent unwanted zooming on mobile devices
+- [x] Optimize form layout for mobile screens with larger touch targets
+- [x] Improve readability of schedule tables on small screens with horizontal scrolling indicators
+- [x] Add elastic zoom constraints for better mobile viewing experience
+- [x] Test and optimize for various mobile device sizes (small, medium, large screens)
+
+### 12.2 Form Interface Redesign
+- [x] Redesign checkbox and selection components with modern, visually consistent styling
+- [x] Replace default checkboxes with custom-styled toggle switches for better visual appeal
+- [x] Implement a more intuitive course selection interface with clearer visual hierarchy
+- [x] Add subtle animations for form interactions (selections, additions, removals)
+- [x] Improve form section visual separation with better spacing and dividers
+
+### 12.3 Visual Design Consistency
+- [x] Create a cohesive color system for status indicators and interactive elements
+- [x] Standardize button styles across the application with consistent hover/active states
+- [x] Implement improved visual feedback for all interactive elements
+- [x] Add subtle transitions between states for a more polished feel
+- [x] Ensure consistent spacing and alignment throughout the interface
+
+### 12.4 Schedule Display Enhancements
+- [x] Improve the visual presentation of schedule cards with better contrast and spacing
+- [x] Enhance the visual distinction between different course types/departments
+- [x] Optimize table layout for readability with improved typography and spacing
+- [x] Add subtle visual indicators for schedule comparison
+- [x] Implement clearer visual hierarchy in schedule information presentation
+
+These improvements focus on enhancing the existing functionality through better visual design and user experience, especially for mobile users, rather than adding new features. The goal is to make the application more intuitive, visually appealing, and easier to use across all devices.

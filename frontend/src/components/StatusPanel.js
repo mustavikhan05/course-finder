@@ -22,17 +22,26 @@ const Panel = styled.div`
   border-radius: 12px; // Consistent with other cards
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08); // Consistent shadow
+  
+  @media (max-width: 768px) {
+    border-radius: 10px; // Slightly smaller radius on mobile
+  }
 `;
 
 const PanelHeader = styled.div`
   background-color: ${colors.panelHeaderBg};
   color: ${colors.panelHeaderColor};
-  padding: 12px 18px;
+  padding: 14px 18px; // Increased padding
   font-weight: 600; // Bolder header text
   font-size: 1.05rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  
+  @media (max-width: 480px) {
+    padding: 12px 16px; // Slightly reduced padding on smaller screens
+    font-size: 1rem;
+  }
 `;
 
 const StatusIndicator = styled.span`
@@ -44,10 +53,29 @@ const StatusIndicator = styled.span`
   margin-left: 8px; // Adjusted margin
   border: 2px solid ${colors.panelHeaderBg}; // Creates a border effect
   box-shadow: 0 0 5px ${props => props.online ? colors.success : colors.danger}33; // Subtle glow
+  
+  // Add a pulsing animation for the status indicator
+  animation: ${props => props.online ? 'pulse 2s infinite' : 'none'};
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 ${props => props.online ? `${colors.success}80` : 'none'};
+    }
+    70% {
+      box-shadow: 0 0 0 6px ${props => props.online ? `${colors.success}00` : 'none'};
+    }
+    100% {
+      box-shadow: 0 0 0 0 ${props => props.online ? `${colors.success}00` : 'none'};
+    }
+  }
 `;
 
 const PanelBody = styled.div`
-  padding: 18px;
+  padding: 20px;
+  
+  @media (max-width: 480px) {
+    padding: 16px 14px; // Reduced padding on mobile
+  }
 `;
 
 const StatusGrid = styled.div`
@@ -55,13 +83,27 @@ const StatusGrid = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); // Responsive grid
   gap: 15px;
   margin-bottom: 18px;
+  
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(2, 1fr); // Force 2 columns on very small screens
+    gap: 10px;
+  }
 `;
 
 const StatusItem = styled.div`
   background-color: ${colors.background}; // Light background for each item
   padding: 12px;
-  border-radius: 6px;
+  border-radius: 8px; // More consistent with design system
   border: 1px solid ${colors.border};
+  transition: transform 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+  
+  @media (max-width: 480px) {
+    padding: 10px; // Smaller padding on mobile
+  }
 `;
 
 const StatusLabel = styled.div`
@@ -77,6 +119,10 @@ const StatusValue = styled.div`
   color: ${colors.text};
   font-weight: 600;
   word-break: break-word;
+  
+  @media (max-width: 480px) {
+    font-size: 1rem; // Slightly smaller on mobile
+  }
 `;
 
 const RefreshCountdown = styled.div`
@@ -85,6 +131,18 @@ const RefreshCountdown = styled.div`
   margin-top: 20px;
   text-align: center;
   font-style: italic;
+  
+  // Add a visual progress indicator
+  &::after {
+    content: "";
+    display: block;
+    width: ${props => `${(props.countdown / 30) * 100}%`};
+    height: 3px;
+    background-color: ${colors.primary};
+    margin: 8px auto 0;
+    border-radius: 2px;
+    transition: width 1s linear;
+  }
 `;
 
 const ConstraintsList = styled.ul`
@@ -93,25 +151,40 @@ const ConstraintsList = styled.ul`
   font-size: 0.85rem;
   color: ${colors.textSecondary};
   list-style-type: disc; // More standard list style
+  
+  @media (max-width: 480px) {
+    padding-left: 16px;
+    font-size: 0.8rem;
+  }
 `;
 
 const ConstraintItem = styled.li`
-  margin-bottom: 5px;
+  margin-bottom: 6px;
   line-height: 1.5;
 `;
 
 const InfoNote = styled.div`
   margin-top: 20px;
-  padding: 12px 15px;
+  padding: 14px 16px;
   background-color: ${colors.infoLight};
   border-left: 4px solid ${colors.primary}; // Use primary color for border
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.85rem;
   color: ${colors.infoText};
+  animation: fadeIn 0.5s ease-in;
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
   strong {
     color: ${colors.primary};
     font-weight: 600;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 12px 14px;
   }
 `;
 
@@ -253,7 +326,7 @@ function StatusPanel({
         )}
         
         {mode === 'default' && !isLoading && (
-          <RefreshCountdown>
+          <RefreshCountdown countdown={countdown}>
             Refreshing in {countdown} seconds...
           </RefreshCountdown>
         )}

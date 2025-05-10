@@ -25,15 +25,42 @@ const GlobalStyle = createGlobalStyle`
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     color: ${colors.text};
     line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    touch-action: manipulation; /* Improves touch behavior */
+    overflow-x: hidden;
   }
 
   *, *::before, *::after {
     box-sizing: border-box;
   }
 
+  /* Improved touch targets for mobile */
+  button, 
+  input, 
+  select, 
+  a {
+    touch-action: manipulation;
+  }
+
+  /* Standardize form element sizes */
+  input, 
+  select, 
+  button,
+  textarea {
+    font-family: inherit;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+
   h1, h2, h3, h4, h5, h6 {
     margin-top: 0;
     font-weight: 600; // Slightly bolder headings
+  }
+  
+  /* Prevent overflows */
+  img, video {
+    max-width: 100%;
+    height: auto;
   }
 `;
 
@@ -88,4 +115,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
