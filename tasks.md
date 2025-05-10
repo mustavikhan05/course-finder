@@ -165,12 +165,14 @@ Workflow:
    - Web: Modern React frontend with responsive design (run via run_frontend.sh)
    - Real-time updates with 30-second auto-refresh
    - Favorites system with localStorage persistence
+   - Frontend successfully tested and connected to backend API
 
 5. **Backend API**:
    - Flask backend with RESTful endpoints
    - CORS support for cross-origin requests
    - JSON responses with schedules and metadata
    - Error handling and status reporting
+   - Successfully tested API endpoints
 
 The system is now fully functional for monitoring available course sections and finding optimal schedules that meet all 11 hard constraints, ranked according to the 3 soft preferences. Both CLI and Web interfaces are operational, with the web interface offering additional features like favorites and filtering.
 
@@ -202,6 +204,13 @@ python app.py
 ```
 
 The web interface will automatically connect to the backend running on http://localhost:8000 and display the schedules in a modern web UI.
+
+### Required Files for React Frontend
+The React frontend requires these files in the public directory:
+- index.html - The main HTML template
+- manifest.json - Web app manifest for PWA support
+- favicon.ico - Website icon
+- robots.txt - Standard robots control file
 
 ## 7. Optional Enhancements (if time permits)
 
@@ -265,7 +274,7 @@ Both implementations use the same core logic (scraper.py, filters.py, scheduler.
 - [x] Implement day-wise grouping of courses in each schedule (May 10, 2025)
 - [x] Add filter controls as React components (May 10, 2025)
 - [x] Create a "favorites" feature using browser localStorage (May 10, 2025)
-- [ ] Add browser notifications for seat availability changes
+- [ ] Add browser notifications for seat availability changes (Next priority)
 - [x] Set up proper error handling and loading states (May 10, 2025)
 
 ## Web App Features (Priority Order)
