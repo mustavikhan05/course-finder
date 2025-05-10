@@ -3,7 +3,7 @@ NSU Course Scheduler - API Routes
 This module defines the API routes for the Flask backend.
 """
 
-from flask import Blueprint, jsonify, current_app
+from flask import Blueprint, jsonify, current_app, request
 from flask_cors import cross_origin
 import time
 import sys
@@ -140,6 +140,97 @@ def get_schedules():
                     'with_evening': len(filtered_df_with_evening),
                     'without_evening': len(filtered_df_without_evening)
                 }
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': time.time()
+        }), 500
+
+@api_bp.route('/schedules/generate', methods=['POST'])
+@cross_origin()
+def generate_custom_schedules():
+    """
+    Generate schedules based on custom constraints provided in the request.
+    
+    Request body should contain:
+    {
+        "required_courses": ["BIO103", "CSE327", ...],
+        "start_time_constraint": "11:00 AM",  # Minimum start time for lectures
+        "day_pattern": ["ST", "MW"],          # Allowed day patterns
+        "exclude_evening_classes": true,      # Whether to exclude classes after 6 PM
+        "max_days": 5,                        # Maximum allowed distinct days
+        "instructor_preferences": {           # Course-specific instructor preferences
+            "CSE327": "NBM"
+        }
+    }
+    
+    Returns JSON response with generated schedules based on provided constraints.
+    """
+    try:
+        # Get request data
+        data = request.json
+        if not data:
+            return jsonify({
+                'error': 'No data provided',
+                'timestamp': time.time()
+            }), 400
+        
+        # Extract constraints with defaults if not provided
+        required_courses = data.get('required_courses', [])
+        start_time_constraint = data.get('start_time_constraint', '11:00 AM')
+        day_pattern = data.get('day_pattern', ['ST', 'MW'])
+        exclude_evening_classes = data.get('exclude_evening_classes', False)
+        max_days = data.get('max_days', 5)
+        instructor_preferences = data.get('instructor_preferences', {})
+        
+        # Validate required courses
+        if not required_courses:
+            return jsonify({
+                'error': 'No required courses specified',
+                'timestamp': time.time()
+            }), 400
+        
+        # Fetch course data
+        courses_df = fetch_course_data()
+        
+        # Filter courses based on user constraints
+        filtered_df = apply_filters(
+            courses_df, 
+            exclude_evening_classes=exclude_evening_classes,
+            custom_constraints={
+                'required_courses': required_courses,
+                'start_time_constraint': start_time_constraint,
+                'day_pattern': day_pattern,
+                'max_days': max_days,
+                'instructor_preferences': instructor_preferences
+            }
+        )
+        
+        # Generate schedules with custom constraints
+        valid_schedules = generate_schedules(filtered_df, max_days=max_days)
+        
+        # Process schedules
+        _, result_schedules = process_schedules(valid_schedules, [])
+        
+        # Return JSON response
+        return jsonify({
+            'schedules': result_schedules,
+            'total_found': len(valid_schedules),
+            'timestamp': time.time(),
+            'stats': {
+                'courses_fetched': len(courses_df),
+                'courses_after_filtering': len(filtered_df)
+            },
+            'constraints': {
+                'required_courses': required_courses,
+                'start_time_constraint': start_time_constraint,
+                'day_pattern': day_pattern,
+                'exclude_evening_classes': exclude_evening_classes,
+                'max_days': max_days,
+                'instructor_preferences': instructor_preferences
             }
         })
         

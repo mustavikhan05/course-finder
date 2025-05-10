@@ -19,12 +19,13 @@ import re
 from itertools import product
 from .filters import has_same_section_cse332, count_days_in_schedule
 
-def generate_schedules(filtered_df):
+def generate_schedules(filtered_df, max_days=5):
     """
     Generate all valid schedule combinations from filtered course sections.
     
     Args:
         filtered_df (pandas.DataFrame): DataFrame with filtered course sections
+        max_days (int): Maximum number of distinct days in a valid schedule
     
     Returns:
         list: List of valid schedule combinations
@@ -89,8 +90,8 @@ def generate_schedules(filtered_df):
         print("No evening class sections found (all start before 6:00 PM)")
     
     # Use recursive approach to build schedules
-    print("Starting schedule generation...")
-    generate_schedule_recursive(course_codes, 0, {}, course_options, valid_schedules, partial_schedules)
+    print(f"Starting schedule generation with max_days={max_days}...")
+    generate_schedule_recursive(course_codes, 0, {}, course_options, valid_schedules, partial_schedules, max_days)
     
     # Print debug stats
     print("\nSchedule generation stats:")
@@ -185,7 +186,7 @@ def process_cse332_sections(course_options):
         for course in cse332_courses:
             print(f"  {course} now has {len(course_options[course])} sections")
 
-def generate_schedule_recursive(course_codes, index, current_schedule, course_options, valid_schedules, partial_schedules):
+def generate_schedule_recursive(course_codes, index, current_schedule, course_options, valid_schedules, partial_schedules, max_days):
     """
     Recursively generate valid schedules by trying different course sections.
     
@@ -196,6 +197,7 @@ def generate_schedule_recursive(course_codes, index, current_schedule, course_op
         course_options (dict): Dictionary mapping course codes to lists of section options
         valid_schedules (list): List to collect valid complete schedules
         partial_schedules (list): List to collect valid partial schedules (4+ courses)
+        max_days (int): Maximum number of distinct days in a valid schedule
     """
     # For debug tracking
     global debug_stats
@@ -209,7 +211,7 @@ def generate_schedule_recursive(course_codes, index, current_schedule, course_op
         days_count = count_days_in_schedule(schedule)
         has_valid_cse332 = has_same_section_cse332(schedule)
         
-        if days_count <= 5 and has_valid_cse332:
+        if days_count <= max_days and has_valid_cse332:
             # We have a valid partial schedule
             # Add a copy to avoid reference issues when backtracking
             if schedule not in partial_schedules:  # Avoid duplicates
@@ -224,7 +226,7 @@ def generate_schedule_recursive(course_codes, index, current_schedule, course_op
         
         # H11: Check total days constraint (max 5 days)
         days_count = count_days_in_schedule(schedule)
-        if days_count <= 5:
+        if days_count <= max_days:
             # H6: Check if CSE 332 lecture and lab have same section
             if has_same_section_cse332(schedule):
                 valid_schedules.append(schedule)
@@ -239,7 +241,7 @@ def generate_schedule_recursive(course_codes, index, current_schedule, course_op
             debug_stats['days_constraint_failures'] += 1
             # Print details of the first few failures
             if debug_stats['days_constraint_failures'] <= 3:
-                print(f"Failed on days constraint: {days_count} days in schedule (> 5)")
+                print(f"Failed on days constraint: {days_count} days in schedule (> {max_days})")
                 all_days = set()
                 for course in schedule:
                     for day in course['days']:
@@ -268,7 +270,7 @@ def generate_schedule_recursive(course_codes, index, current_schedule, course_op
             # Recurse to the next course
             generate_schedule_recursive(
                 course_codes, index + 1, current_schedule, 
-                course_options, valid_schedules, partial_schedules
+                course_options, valid_schedules, partial_schedules, max_days
             )
             
             # Backtrack

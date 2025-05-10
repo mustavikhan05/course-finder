@@ -276,12 +276,12 @@ The goal is to deploy the current version first and then add user input function
 
 ### 10.1 Backend API Enhancements
 
-- [ ] Create a new endpoint for dynamic schedule generation:
+- [x] Create a new endpoint for dynamic schedule generation:
   ```
   POST /api/schedules/generate
   ```
 
-- [ ] Implement request validation for user constraints:
+- [x] Implement request validation for user constraints:
   - Required courses list
   - Time restrictions
   - Day pattern preferences
@@ -289,12 +289,12 @@ The goal is to deploy the current version first and then add user input function
   - Maximum days
   - Evening class preferences
 
-- [ ] Modify the filter and scheduler modules to accept dynamic constraints:
+- [x] Modify the filter and scheduler modules to accept dynamic constraints:
   - Update apply_filters() to accept parameters from request
   - Update generate_schedules() to work with custom course lists
   - Ensure all constraints are properly validated
 
-- [ ] Add error handling for invalid constraint combinations
+- [x] Add error handling for invalid constraint combinations
 
 ### 10.2 Frontend UI Components
 

@@ -21,13 +21,21 @@ import pandas as pd
 from datetime import datetime
 import re
 
-def apply_filters(courses_df, exclude_evening_classes=False):
+def apply_filters(courses_df, exclude_evening_classes=False, custom_constraints=None):
     """
     Apply all filtering criteria to the courses DataFrame.
     
     Args:
         courses_df (pandas.DataFrame): DataFrame containing course information
         exclude_evening_classes (bool): Whether to exclude evening classes (starting at or after 6:00 PM)
+        custom_constraints (dict, optional): Custom constraints provided by the user
+            {
+                'required_courses': list of course codes,
+                'start_time_constraint': minimum start time for lectures,
+                'day_pattern': allowed day patterns,
+                'max_days': maximum number of distinct days,
+                'instructor_preferences': dict mapping course codes to preferred instructors
+            }
     
     Returns:
         pandas.DataFrame: Filtered DataFrame with courses meeting all criteria
@@ -35,22 +43,36 @@ def apply_filters(courses_df, exclude_evening_classes=False):
     # Make a copy to avoid modifying the original
     filtered_df = courses_df.copy()
     
-    # H3: Filter for lectures starting at or after 11:00 AM (not 12 PM anymore)
-    filtered_df = filter_after_11am(filtered_df)
+    # If custom constraints are provided, filter for required courses first
+    if custom_constraints and 'required_courses' in custom_constraints:
+        filtered_df = filter_required_courses(filtered_df, custom_constraints['required_courses'])
     
-    # H4: Filter for lecture courses on ST/MW only
-    filtered_df = filter_st_mw_only(filtered_df)
+    # Apply custom start time constraint if provided
+    start_time_constraint = '11:00 AM'  # Default
+    if custom_constraints and 'start_time_constraint' in custom_constraints:
+        start_time_constraint = custom_constraints['start_time_constraint']
+    filtered_df = filter_by_start_time(filtered_df, start_time_constraint)
     
-    # H7: Filter for CSE327 sections with instructor NBM
-    filtered_df = filter_cse327_sections(filtered_df)
+    # Apply custom day pattern constraint if provided
+    day_pattern = ['ST', 'MW']  # Default
+    if custom_constraints and 'day_pattern' in custom_constraints:
+        day_pattern = custom_constraints['day_pattern']
+    filtered_df = filter_by_day_pattern(filtered_df, day_pattern)
     
-    # H9: Filter for sections with available seats
+    # Apply instructor preferences if provided
+    if custom_constraints and 'instructor_preferences' in custom_constraints:
+        filtered_df = filter_by_instructor_preferences(filtered_df, custom_constraints['instructor_preferences'])
+    else:
+        # Apply default CSE327 instructor constraint if no custom preference is specified
+        filtered_df = filter_cse327_sections(filtered_df)
+    
+    # Apply seat availability filter (always required)
     filtered_df = filter_available_seats(filtered_df)
     
-    # H10: Filter out labs starting at 08:00
+    # Filter out labs starting at 08:00 (always required)
     filtered_df = filter_early_morning_labs(filtered_df)
     
-    # H12: Optional - filter out evening classes (starting at or after 6:00 PM)
+    # Optional - filter out evening classes (starting at or after 6:00 PM)
     if exclude_evening_classes:
         filtered_df = filter_evening_classes(filtered_df)
     
@@ -59,6 +81,80 @@ def apply_filters(courses_df, exclude_evening_classes=False):
     # H11: At most 5 distinct class days per week is handled during schedule generation
     
     return filtered_df
+
+def is_after_start_time(time_str, min_start_time):
+    """
+    Check if a start time is at or after the specified minimum start time.
+    
+    Args:
+        time_str (str): Time string in format like "11:00 AM"
+        min_start_time (str): Minimum start time in format like "11:00 AM"
+    
+    Returns:
+        bool: True if time is at or after the minimum start time, False otherwise
+    """
+    if not time_str or pd.isna(time_str):
+        return False
+    
+    try:
+        # Parse both time strings into components
+        time_match = re.match(r'(\d+):(\d+)\s*(AM|PM)', time_str)
+        min_match = re.match(r'(\d+):(\d+)\s*(AM|PM)', min_start_time)
+        
+        if not time_match or not min_match:
+            return False
+            
+        # Extract components
+        time_hour, time_min, time_ampm = time_match.groups()
+        min_hour, min_min, min_ampm = min_match.groups()
+        
+        # Convert to integers
+        time_hour, time_min = int(time_hour), int(time_min)
+        min_hour, min_min = int(min_hour), int(min_min)
+        
+        # Convert to 24-hour format for easier comparison
+        if time_ampm == "PM" and time_hour < 12:
+            time_hour += 12
+        elif time_ampm == "AM" and time_hour == 12:
+            time_hour = 0
+            
+        if min_ampm == "PM" and min_hour < 12:
+            min_hour += 12
+        elif min_ampm == "AM" and min_hour == 12:
+            min_hour = 0
+        
+        # Compare times
+        if time_hour > min_hour:
+            return True
+        elif time_hour == min_hour and time_min >= min_min:
+            return True
+        else:
+            return False
+    except:
+        return False
+
+def filter_by_start_time(courses_df, min_start_time):
+    """
+    Filter courses to include only those starting at or after the specified minimum start time.
+    Only applies to lecture courses - lab courses can be at any time.
+    
+    Args:
+        courses_df (pandas.DataFrame): DataFrame containing course information
+        min_start_time (str): Minimum start time in format like "11:00 AM"
+    
+    Returns:
+        pandas.DataFrame: Filtered DataFrame
+    """
+    # Create a mask for lecture courses (those that need to meet start time constraint)
+    lecture_courses = ~courses_df['course_code'].str.contains('L', case=True, na=False)
+    after_min_time = courses_df['start_time'].apply(lambda x: is_after_start_time(x, min_start_time))
+    
+    # Courses must be either:
+    # 1. Lab courses (no time restriction for now) OR
+    # 2. Lecture courses that start at or after the minimum start time
+    mask = (~lecture_courses) | (lecture_courses & after_min_time)
+    
+    return courses_df[mask]
 
 def is_after_11am(time_str):
     """
@@ -70,34 +166,7 @@ def is_after_11am(time_str):
     Returns:
         bool: True if time is at or after 11:00 AM, False otherwise
     """
-    if not time_str or pd.isna(time_str):
-        return False
-    
-    try:
-        # Parse the time string into components
-        match = re.match(r'(\d+):(\d+)\s*(AM|PM)', time_str)
-        if not match:
-            return False
-            
-        hour, minute, ampm = match.groups()
-        hour = int(hour)
-        
-        # 11:00 AM or later in the morning
-        if ampm == "AM" and hour >= 11:
-            return True
-        # 12:00 AM is midnight, so this should return False
-        elif ampm == "AM" and hour == 12:
-            return False
-        # Any PM time (afternoon/evening)
-        elif ampm == "PM" and hour != 12:
-            return True
-        # 12:00 PM is noon
-        elif ampm == "PM" and hour == 12:
-            return True
-            
-        return False
-    except:
-        return False
+    return is_after_start_time(time_str, "11:00 AM")
 
 def filter_after_11am(courses_df):
     """
@@ -110,16 +179,63 @@ def filter_after_11am(courses_df):
     Returns:
         pandas.DataFrame: Filtered DataFrame
     """
-    # Create a mask for lecture courses (those that need to be after 11 AM)
-    lecture_courses = ~courses_df['course_code'].str.contains('L', case=True, na=False)
-    after_11am = courses_df['start_time'].apply(is_after_11am)
+    return filter_by_start_time(courses_df, "11:00 AM")
+
+def is_valid_day_pattern(day_str, course_code, allowed_patterns):
+    """
+    Check if section days match one of the allowed day patterns.
+    Lab courses can be on any day.
     
-    # Courses must be either:
-    # 1. Lab courses (no time restriction for now) OR
-    # 2. Lecture courses that start at or after 11:00 AM
-    mask = (~lecture_courses) | (lecture_courses & after_11am)
+    Args:
+        day_str (str): String containing day codes
+        course_code (str): Course code to determine if it's a lab course
+        allowed_patterns (list): List of allowed day patterns (e.g., ['ST', 'MW'])
     
-    return courses_df[mask]
+    Returns:
+        bool: True if days are appropriate for the course type, False otherwise
+    """
+    if not day_str or pd.isna(day_str):
+        return False
+    
+    # Check if this is a lab course
+    is_lab = 'L' in course_code
+    
+    # Lab courses have no day restrictions
+    if is_lab:
+        return True
+    else:
+        # Sort the day string to normalize it (e.g., "TS" becomes "ST")
+        sorted_days = ''.join(sorted(day_str))
+        
+        # For lectures, the day pattern must be in the allowed list
+        # Also allow individual days from the patterns (e.g., 'S', 'T', 'M', 'W')
+        for pattern in allowed_patterns:
+            if sorted_days == ''.join(sorted(pattern)):
+                return True
+            # Also allow individual days
+            if len(sorted_days) == 1 and sorted_days in pattern:
+                return True
+                
+        return False
+
+def filter_by_day_pattern(courses_df, allowed_patterns):
+    """
+    Filter courses based on allowed day patterns.
+    Lecture courses should match one of the allowed patterns.
+    Lab courses can be on any day.
+    
+    Args:
+        courses_df (pandas.DataFrame): DataFrame containing course information
+        allowed_patterns (list): List of allowed day patterns (e.g., ['ST', 'MW'])
+    
+    Returns:
+        pandas.DataFrame: Filtered DataFrame
+    """
+    # Apply the day filter based on course type and allowed patterns
+    return courses_df[courses_df.apply(
+        lambda row: is_valid_day_pattern(row['days'], row['course_code'], allowed_patterns), 
+        axis=1
+    )]
 
 def is_st_mw_only(day_str, course_code):
     """
@@ -134,24 +250,7 @@ def is_st_mw_only(day_str, course_code):
     Returns:
         bool: True if days are appropriate for the course type, False otherwise
     """
-    if not day_str or pd.isna(day_str):
-        return False
-    
-    # Check if this is a lab course
-    is_lab = 'L' in course_code
-    
-    # H5: Lab courses have no day restrictions
-    if is_lab:
-        return True
-    else:
-        # H4: Lecture courses must be on ST or MW only
-        valid_day_combinations = ['ST', 'MW', 'S', 'M', 'T', 'W']
-        
-        # Sort the day string to normalize it (e.g., "TS" becomes "ST")
-        sorted_days = ''.join(sorted(day_str))
-        
-        # For lectures, the exact day combination must be in the valid list
-        return sorted_days in valid_day_combinations
+    return is_valid_day_pattern(day_str, course_code, ['ST', 'MW'])
 
 def filter_st_mw_only(courses_df):
     """
@@ -165,8 +264,60 @@ def filter_st_mw_only(courses_df):
     Returns:
         pandas.DataFrame: Filtered DataFrame
     """
-    # Apply the day filter based on course type
-    return courses_df[courses_df.apply(lambda row: is_st_mw_only(row['days'], row['course_code']), axis=1)]
+    return filter_by_day_pattern(courses_df, ['ST', 'MW'])
+
+def filter_by_instructor_preferences(courses_df, instructor_preferences):
+    """
+    Filter courses based on instructor preferences.
+    Only applies the filter to courses specified in the preferences.
+    
+    Args:
+        courses_df (pandas.DataFrame): DataFrame containing course information
+        instructor_preferences (dict): Dictionary mapping course codes to preferred instructors
+    
+    Returns:
+        pandas.DataFrame: Filtered DataFrame
+    """
+    filtered_df = courses_df.copy()
+    
+    for course_code, preferred_instructor in instructor_preferences.items():
+        # Create a mask for rows not matching this course code
+        non_course_mask = ~filtered_df['course_code'].str.contains(course_code, case=False, na=False)
+        
+        # Create a mask for rows matching this course code and instructor
+        course_instructor_mask = (
+            filtered_df['course_code'].str.contains(course_code, case=False, na=False) &
+            filtered_df['instructor'].str.contains(preferred_instructor, case=False, na=False)
+        )
+        
+        # Apply the combined mask
+        filtered_df = filtered_df[non_course_mask | course_instructor_mask]
+    
+    return filtered_df
+
+def filter_required_courses(courses_df, required_courses):
+    """
+    Filter DataFrame to include only required courses.
+    
+    Args:
+        courses_df (pandas.DataFrame): DataFrame containing course information
+        required_courses (list): List of required course codes
+    
+    Returns:
+        pandas.DataFrame: Filtered DataFrame with only required courses
+    """
+    # Create a mask to keep only courses in the required list
+    course_mask = pd.Series(False, index=courses_df.index)
+    
+    for course in required_courses:
+        # For each required course, look for exact matches and labs if needed
+        course_mask = course_mask | courses_df['course_code'].str.contains(course, case=False, na=False)
+        
+        # If the course has a lab component (CSE332 -> CSE332L), also include it
+        if course.upper().startswith('CSE332'):
+            course_mask = course_mask | courses_df['course_code'].str.contains('CSE332L', case=False, na=False)
+    
+    return courses_df[course_mask]
 
 def filter_cse327_sections(courses_df):
     """
