@@ -161,8 +161,8 @@ Workflow:
 
 4. **User Interface**:
    - Implemented both CLI and Web interfaces
-   - CLI: Color-coded text-based dashboard showing top 10 schedules
-   - Web: Modern React frontend with responsive design
+   - CLI: Color-coded text-based dashboard showing top 10 schedules (run via run.sh)
+   - Web: Modern React frontend with responsive design (run via run_frontend.sh)
    - Real-time updates with 30-second auto-refresh
    - Favorites system with localStorage persistence
 
@@ -173,6 +173,35 @@ Workflow:
    - Error handling and status reporting
 
 The system is now fully functional for monitoring available course sections and finding optimal schedules that meet all 11 hard constraints, ranked according to the 3 soft preferences. Both CLI and Web interfaces are operational, with the web interface offering additional features like favorites and filtering.
+
+## How to Run the Application
+
+### Running the CLI Interface
+To run the command-line interface version of the application:
+```bash
+# From the project root directory
+./run.sh
+```
+This will start the text-based interface showing the top 10 schedules in the terminal, with auto-refresh every 30 seconds.
+
+### Running the Web Interface
+The web interface requires two components to be running:
+
+1. Start the Flask backend (if not already running):
+```bash
+# From the project root directory
+cd backend
+source venv/bin/activate
+python app.py
+```
+
+2. Start the React frontend:
+```bash
+# From the project root directory
+./run_frontend.sh
+```
+
+The web interface will automatically connect to the backend running on http://localhost:8000 and display the schedules in a modern web UI.
 
 ## 7. Optional Enhancements (if time permits)
 
@@ -212,6 +241,8 @@ Before implementing the web app, the project structure needs to be refactored to
 - [ ] Set up development environment:
   - [x] Create separate requirements files for backend and frontend (May 10, 2025)
   - [x] Set up development scripts for both components (May 10, 2025)
+    - [x] run.sh - Script to start the CLI interface (May 10, 2025)
+    - [x] run_frontend.sh - Script to start the React web interface (May 10, 2025)
   - [x] Create proper documentation for running the application (May 10, 2025)
 
 **Note:** The project currently maintains two implementations:
