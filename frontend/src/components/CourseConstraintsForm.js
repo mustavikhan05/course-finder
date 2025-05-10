@@ -658,13 +658,13 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
             {showCourseDropdown && filteredCourses.length > 0 && (
               <DropdownList>
                 {filteredCourses.map(course => (
-                  <CourseDropdownItem
+                  <DropdownItem
                     key={course}
-                    course={course}
-                    title={getCourseTitle(course)}
                     onClick={() => handleCourseSelect(course)}
-                    isHighlighted={course === courseInput}
-                  />
+                  >
+                    <CourseBadge course={course}>{course}</CourseBadge>
+                    <div style={{ marginLeft: 8, color: '#666', fontSize: '0.85em' }}>{getCourseTitle(course)}</div>
+                  </DropdownItem>
                 ))}
               </DropdownList>
             )}

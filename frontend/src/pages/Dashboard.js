@@ -5,6 +5,8 @@ import ScheduleList from '../components/ScheduleList';
 import StatusPanel from '../components/StatusPanel';
 import CourseConstraintsForm from '../components/CourseConstraintsForm';
 import { fetchSchedules, generateSchedules } from '../utils/api';
+import api from '../utils/api';
+import ScheduleCard from '../components/ScheduleCard';
 
 // Use colors from App.js or define a similar palette if not directly accessible
 // For this example, I'll assume colors are accessible or redefined
@@ -120,6 +122,13 @@ const SuccessMessage = styled(MessageCardBase)`
   h4 {
     color: #155724;
   }
+`;
+
+const LastUpdated = styled.div`
+  margin-top: 20px;
+  color: ${colors.textSecondary};
+  font-size: 0.95rem;
+  text-align: right;
 `;
 
 function Dashboard() {
