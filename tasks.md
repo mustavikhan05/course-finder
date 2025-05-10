@@ -134,6 +134,7 @@ Workflow:
 - [x] Test full system operation for multiple refresh cycles (May 15, 2023) - DONE
 - [x] Refine display format based on actual data (May 15, 2023) - DONE
 - [x] Test with updated hard constraints and soft preferences (June 2, 2023) - DONE
+- [x] Add better error handling for university website availability issues (May 15, 2025) - DONE
 
 ## 6. Analysis & Diagnostic Tools
 
@@ -146,7 +147,15 @@ Workflow:
 - [ ] Create a comprehensive analysis report of scheduling constraints
 - [ ] Implement visualization of available sections and constraints
 
-## Current Status (May 10, 2025)
+## 11. Availability and Error Handling
+
+- [x] Identify NSU website availability patterns and limitations (May 15, 2025) - DONE
+- [x] Enhance error handling for connection timeouts during nighttime hours (May 15, 2025) - DONE
+- [x] Implement user-friendly error messages about university website availability (May 15, 2025) - DONE
+- [x] Add time-based checking to detect and display nighttime notifications (May 15, 2025) - DONE
+- [x] Improve frontend to explain availability schedule to users (May 15, 2025) - DONE
+
+## Current Status (May 15, 2025)
 
 1. **Successfully Implemented All 12 Hard Constraints**:
    - H1-H12 constraints properly applied during filtering and schedule generation
@@ -186,19 +195,23 @@ Workflow:
    - Automatically handle CSE332/CSE332L section pairing
    - Status panel displaying detailed constraint information
 
+7. **Deployment and Availability**:
+   - Successfully deployed on Render (both backend and frontend)
+   - Auto-deployment configured for continuous integration
+   - Enhanced error handling for university website availability issues
+   - Time-based notifications for nighttime availability (website is offline after 12 AM Bangladesh time)
+   - User-friendly messaging to explain availability schedule
+
 The system is now fully functional for monitoring available course sections and finding optimal schedules that meet all 12 hard constraints, ranked according to the 3 soft preferences. Both CLI and Web interfaces are operational, with the web interface offering additional features like favorites and filtering. Users can now generate custom schedules based on their specific requirements, making the system truly personalized.
 
 ## Next Steps
 
-- Test the frontend custom constraints interface with real users
-- Gather feedback on the user interface and experience
-- Monitor system performance and optimize as needed
-- Consider additional features like:
-  - Email notifications when specific course sections become available
-  - More advanced constraints (e.g., preferred time blocks, minimum break times)
-  - Visual calendar view of schedules
-  - Export schedules to calendar formats (iCal, Google Calendar)
-  - Mobile-friendly PWA version
+- Add custom notification system for seat availability changes
+- Implement visual calendar view of schedules
+- Improve mobile experience with responsive design refinements
+- Add export functionality for schedules (iCal, CSV, Google Calendar)
+- Set up usage analytics to track most requested course combinations
+- Implement intelligent caching for periodic university website downtime
 
 ## 9. Deployment Plan for Render
 
