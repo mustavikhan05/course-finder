@@ -62,6 +62,7 @@ def is_after_12pm(time_str):
 def filter_after_12pm(courses_df):
     """
     Filter courses to include only those starting after 12 PM.
+    Only applies to lecture courses - lab courses can be at any time.
     
     Args:
         courses_df (pandas.DataFrame): DataFrame containing course information
@@ -69,13 +70,22 @@ def filter_after_12pm(courses_df):
     Returns:
         pandas.DataFrame: Filtered DataFrame
     """
-    return courses_df[courses_df['start_time'].apply(is_after_12pm)]
+    # Create a mask for lecture courses (those that need to be after 12 PM)
+    lecture_courses = ~courses_df['course_code'].str.contains('L', case=True, na=False)
+    after_12pm = courses_df['start_time'].apply(is_after_12pm)
+    
+    # Courses must be either:
+    # 1. Lab courses (no time restriction) OR
+    # 2. Lecture courses that start after 12 PM
+    mask = (~lecture_courses) | (lecture_courses & after_12pm)
+    
+    return courses_df[mask]
 
 def is_st_mw_only(day_str, course_code):
     """
     Check if section days are appropriate based on course type.
-    Lecture courses should be on ST (Sunday-Tuesday) or MW (Monday-Wednesday) only.
-    Lab courses can also be on R (Thursday) but not on A (Saturday).
+    Lecture courses must be on ST (Sunday-Tuesday) or MW (Monday-Wednesday) only.
+    Lab courses have no day restrictions.
     
     Args:
         day_str (str): String containing day codes
@@ -88,27 +98,18 @@ def is_st_mw_only(day_str, course_code):
         return False
     
     # Check if this is a lab course
-    is_lab = any(lab_code in course_code for lab_code in ['CSE332L', 'PHY108L', 'CHE101L'])
+    is_lab = 'L' in course_code
     
-    # Define valid day combinations based on course type
+    # Lab courses have no day restrictions
     if is_lab:
-        # Lab courses can be on ST, MW, or R
-        valid_day_combinations = ['ST', 'MW', 'S', 'M', 'T', 'W', 'R']
-        
-        # Make sure no A (Saturday) in the day string
-        if 'A' in day_str:
-            return False
+        return True
     else:
         # Lecture courses must be on ST or MW only
         valid_day_combinations = ['ST', 'MW', 'S', 'M', 'T', 'W']
-    
-    # Sort the day string to normalize it (e.g., "TS" becomes "ST")
-    sorted_days = ''.join(sorted(day_str))
-    
-    # For labs, we need to check if the day string contains only valid days
-    if is_lab:
-        return all(day in valid_day_combinations for day in day_str)
-    else:
+        
+        # Sort the day string to normalize it (e.g., "TS" becomes "ST")
+        sorted_days = ''.join(sorted(day_str))
+        
         # For lectures, the exact day combination must be in the valid list
         return sorted_days in valid_day_combinations
 

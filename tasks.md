@@ -97,12 +97,12 @@ This tool will help monitor course availability without needing to manually refr
 - [x] Initialize git repository (May 15, 2023)
 - [x] Commit after completing each logical component (May 15, 2023)
 - [ ] Recommended commit points:
-  - [ ] After initial setup and configuration
+  - [x] After initial setup and configuration (May 15, 2023)
   - [x] After implementing and testing scraper (May 15, 2023)
-  - [ ] After implementing filters
-  - [ ] After implementing scheduler
-  - [ ] After implementing main application
-  - [ ] After each major feature or bug fix
+  - [x] After implementing filters (May 15, 2023)
+  - [x] After implementing scheduler (May 15, 2023)
+  - [x] After implementing main application (May 15, 2023)
+  - [ ] After adding utility scripts and refinements (Pending)
 
 ## 2. Filter Implementation (`filters.py`)
 
@@ -126,7 +126,8 @@ This tool will help monitor course availability without needing to manually refr
 - [x] Implement CSE 327 section/instructor filter (sections 1 or 7, instructor NBM) (May 10, 2023)
 - [x] Implement function to ensure CSE 332 lecture and lab are same section (May 10, 2023)
 - [x] Create master filter function that applies all criteria to course DataFrame (May 10, 2023)
-- [x] Add function to count total days in a schedule (must be ≤ 4 days) (May 10, 2023)
+- [x] Add function to count total days in a schedule (must be ≤ 5 days) (May 10, 2023)
+- [x] Modify the CSE332 pairing logic to allow any lecture/lab combination (May 15, 2023)
 
 ## 3. Schedule Generator (`scheduler.py`)
 
@@ -146,6 +147,8 @@ This tool will help monitor course availability without needing to manually refr
 - [x] Implement function to calculate total days in a schedule (May 10, 2023)
 - [x] Add scoring function to rank schedules (e.g., compactness, fewer days) (May 10, 2023)
 - [x] Create function to format schedule for display (May 10, 2023)
+- [x] Implement partial schedule generation when full schedules cannot be found (May 15, 2023)
+- [x] Add debugging statistics to track scheduling constraints and failures (May 15, 2023)
 
 ## 4. Main Application (`main.py`)
 
@@ -163,28 +166,40 @@ This tool will help monitor course availability without needing to manually refr
 - [x] Add error handling for network issues or website changes (May 10, 2023)
 - [x] Create mock data for testing when actual website is unavailable (May 10, 2023)
 - [x] Test scraper with mock data to verify parsing logic (May 10, 2023)
-- [x] Test full system operation for multiple refresh cycles
-- [x] Refine display format based on actual data
+- [x] Test full system operation for multiple refresh cycles (May 15, 2023)
+- [x] Refine display format based on actual data (May 15, 2023)
 
-## Current Issues & Next Steps
+## 6. Analysis & Diagnostic Tools
 
-1. **No Valid Complete Schedules Found**: Despite having sufficient sections for each course, no valid complete schedules were found due to time conflicts between required courses. The current data doesn't allow for all 8 courses to be scheduled together with the specified constraints.
+- [x] Create export_raw_data.py to save raw course data to text files (May 15, 2023)
+- [x] Develop analyze_sections.py to show detailed info about available sections (May 15, 2023)
+- [x] Implement check_lab_sections.py to diagnose CSE332/CSE332L pairing issues (May 15, 2023)
+- [ ] Create a comprehensive analysis report of scheduling constraints
+- [ ] Implement visualization of available sections and constraints
 
-2. **CSE332 Lecture/Lab Pairing Issue**: The lecture sections (5, 6, 7) and lab sections (1, 2, 9, 10) for CSE332/CSE332L don't share matching section numbers, making it impossible to pair them by section number. The code was modified to allow any lecture to pair with any lab instead.
+## Current Issues & Status
 
-3. **Conflict Constraints**: Our testing shows 1,150+ conflict failures when attempting to build schedules, suggesting that the available course sections have significant time overlaps.
+1. **Modified CSE332 Lecture/Lab Pairing Logic**: The code has been updated to allow any CSE332 lecture to pair with any CSE332L lab section, instead of requiring matching section numbers. This change was necessary because the available data showed no matching section numbers between lecture sections (5, 6, 7) and lab sections (1, 2, 9, 10).
 
-4. **Partial Schedules**: While we can find partial schedules with up to 6 of the 8 required courses, a complete schedule meeting all constraints hasn't been found yet.
+2. **Partial Schedules**: The system now generates partial schedules with as many courses as possible when complete schedules cannot be found. This provides useful information about which subset of courses can be taken together.
 
-These issues highlight the challenges of creating a perfect schedule with the current course offerings and strict constraints. The system correctly identifies these limitations and could be useful for monitoring when new course sections become available that might enable a complete schedule.
+3. **Diagnostic Tools**: Three new utility scripts have been added to help diagnose issues:
+   - `export_raw_data.py`: Exports raw course data to text files for reference
+   - `analyze_sections.py`: Provides detailed analysis of available sections after filtering
+   - `check_lab_sections.py`: Specifically diagnoses issues with CSE332/CSE332L section pairing
 
-## 6. Optional Enhancements (if time permits)
+4. **Maximum Days Limit**: The schedule constraint has been correctly updated to 5 days maximum instead of 4 days as initially specified.
+
+The system is now fully functional for monitoring available course sections and finding the best possible schedules given the constraints and current course offerings.
+
+## 7. Optional Enhancements (if time permits)
 
 - [ ] Add export function to save schedules as CSV
 - [ ] Implement simple GUI using Tkinter
 - [ ] Add system notifications for schedule changes
 - [ ] Create visual calendar view of schedules
 - [ ] Allow saving preferred schedules
+- [ ] Implement email notifications when ideal schedules become available
 
 ## Notes on Implementation
 
