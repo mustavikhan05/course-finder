@@ -1,115 +1,184 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 
+// Assuming colors are accessible or redefined
+const colors = {
+  surface: '#ffffff',
+  border: '#dee2e6',
+  text: '#212529',
+  textSecondary: '#6c757d',
+  primary: '#007bff',
+  warning: '#ffc107',
+  warningLight: '#fff3cd',
+  warningDark: '#b38600',
+  danger: '#dc3545',
+  dangerLight: '#f8d7da',
+  accentPink: '#e91e63',
+  lightGray: '#f8f9fa',
+  mediumGray: '#e9ecef',
+  tableHeaderBg: '#f1f3f5',
+  tableEvenRowBg: '#f8f9fa',
+};
+
 const ScheduleCard = styled.div`
-  background-color: ${props => props.isNew ? '#fffbf0' : '#fff'};
-  border: 1px solid ${props => props.isNew ? '#ffcc80' : '#e0e0e0'};
-  border-radius: 8px;
+  background-color: ${props => props.isNew ? colors.warningLight : colors.surface};
+  border: 1px solid ${props => props.isNew ? colors.warning : colors.border};
+  border-radius: 10px; // Slightly more pronounced radius
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.07); // Softer, slightly larger shadow
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
 `;
 
 const ScheduleHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
-  background-color: ${props => props.isNew ? '#fff8e1' : '#f8f9fa'};
-  border-bottom: 1px solid ${props => props.isNew ? '#ffe0b2' : '#e0e0e0'};
+  padding: 12px 18px;
+  background-color: ${props => props.isNew ? colors.warningLight : colors.lightGray};
+  border-bottom: 1px solid ${props => props.isNew ? colors.warning : colors.border};
 `;
 
 const ScheduleTitle = styled.h3`
   margin: 0;
-  font-size: 1.1rem;
-  color: #333;
+  font-size: 1.2rem;
+  color: ${colors.text};
+  font-weight: 600;
   display: flex;
   align-items: center;
 `;
 
 const NewBadge = styled.span`
-  background-color: #ff9800;
-  color: white;
+  background-color: ${colors.warning};
+  color: ${colors.text}; // Darker text for better contrast on yellow
   font-size: 0.7rem;
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 15px;
   margin-left: 10px;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
 const ScheduleScore = styled.div`
   font-size: 0.9rem;
-  color: #666;
+  color: ${colors.textSecondary};
+  padding: 0 18px 10px; // Add padding if shown outside content
 `;
 
 const ScheduleActions = styled.div`
   display: flex;
-  gap: 10px;
+  gap: 8px;
 `;
 
 const ActionButton = styled.button`
   background-color: transparent;
   border: none;
-  color: ${props => props.active ? '#e91e63' : '#757575'};
+  color: ${props => props.active ? colors.accentPink : colors.textSecondary};
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px;
-  border-radius: 4px;
+  justify-content: center; // Center icon
+  padding: 8px;
+  border-radius: 50%; // Circular buttons
+  transition: background-color 0.2s ease, color 0.2s ease;
   
   &:hover {
-    background-color: #f0f0f0;
+    background-color: ${colors.mediumGray};
+    color: ${props => props.active ? colors.accentPink : colors.text};
   }
   
   svg {
-    width: 20px;
-    height: 20px;
+    width: 22px; // Slightly larger icons
+    height: 22px;
   }
 `;
 
 const ScheduleContent = styled.div`
-  padding: ${props => props.isExpanded ? '15px' : '0'};
-  max-height: ${props => props.isExpanded ? '1000px' : '0'};
-  overflow: hidden;
-  transition: max-height 0.3s ease, padding 0.3s ease;
+  padding: ${props => props.isExpanded ? '18px' : '0 18px'}; // Consistent horizontal padding
+  max-height: ${props => props.isExpanded ? '1200px' : '0'}; // Increased max-height
+  overflow: ${props => props.isExpanded ? 'auto' : 'hidden'}; // Allow scroll if content too long
+  transition: max-height 0.35s ease-in-out, padding 0.35s ease-in-out;
+  border-top: ${props => props.isExpanded ? `1px solid ${colors.border}` : 'none'};
+`;
+
+const CourseTableWrapper = styled.div`
+  overflow-x: auto; // Enable horizontal scrolling for the table on small screens
+  width: 100%;
 `;
 
 const CourseTable = styled.table`
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9rem;
+  
+  th, td {
+    padding: 12px 10px; // Adjusted padding
+    text-align: left;
+    vertical-align: middle;
+  }
 `;
 
 const TableHead = styled.thead`
-  background-color: #f0f0f0;
+  background-color: ${colors.tableHeaderBg};
   
   th {
-    padding: 10px;
-    text-align: left;
-    color: #555;
+    color: ${colors.textSecondary};
     font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid ${colors.border};
   }
 `;
 
 const TableBody = styled.tbody`
+  tr {
+    border-bottom: 1px solid ${colors.border};
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
   tr:nth-child(even) {
-    background-color: #f9f9f9;
+    background-color: ${colors.tableEvenRowBg};
   }
   
   td {
-    padding: 10px;
-    border-top: 1px solid #e0e0e0;
+    color: ${colors.text};
   }
 `;
 
 const SeatsCell = styled.td`
+  font-weight: 500;
   color: ${props => {
-    if (props.seats <= 3) return '#d32f2f';
-    if (props.seats <= 5) return '#f57c00';
-    return 'inherit';
+    if (props.seats <= 0) return colors.danger; // No seats
+    if (props.seats <= 3) return colors.warningDark; // Low seats (e.g. orange/dark yellow)
+    if (props.seats <= 10) return colors.text; // Moderate seats
+    return colors.success; // Plenty of seats (green)
   }};
-  font-weight: ${props => props.seats <= 5 ? 'bold' : 'normal'};
+
+  // Add a visual indicator for very low seats
+  ${props => props.seats > 0 && props.seats <= 3 && `
+    position: relative;
+    &::before {
+      content: '!';
+      color: ${colors.warningDark};
+      font-weight: bold;
+      margin-right: 4px;
+    }
+  `}
+  ${props => props.seats <= 0 && `
+    text-decoration: line-through;
+  `}
+`;
+
+const CourseCodeCell = styled.td`
+  font-weight: 600;
+  color: ${colors.primary};
 `;
 
 function Schedule({ schedule, index, isFavorite, onToggleFavorite }) {
@@ -129,6 +198,11 @@ function Schedule({ schedule, index, isFavorite, onToggleFavorite }) {
       <ScheduleHeader isNew={schedule.is_new}>
         <ScheduleTitle>
           Schedule #{index + 1}
+          {schedule.score !== undefined && (
+            <span style={{fontSize: '0.8rem', color: colors.textSecondary, marginLeft: '10px', fontWeight: 400}}>
+              (Score: {schedule.score})
+            </span>
+          )}
           {schedule.is_new && <NewBadge>New</NewBadge>}
         </ScheduleTitle>
         
@@ -164,38 +238,36 @@ function Schedule({ schedule, index, isFavorite, onToggleFavorite }) {
       </ScheduleHeader>
       
       <ScheduleContent isExpanded={isExpanded}>
-        <CourseTable>
-          <TableHead>
-            <tr>
-              <th>Course</th>
-              <th>Section</th>
-              <th>Days</th>
-              <th>Time</th>
-              <th>Room</th>
-              <th>Instructor</th>
-              <th>Seats</th>
-            </tr>
-          </TableHead>
-          <TableBody>
-            {schedule.courses.map((course, idx) => (
-              <tr key={idx}>
-                <td>{course.course_code}</td>
-                <td>{course.section}</td>
-                <td>{course.days}</td>
-                <td>{course.start_time} - {course.end_time}</td>
-                <td>{course.room}</td>
-                <td>{course.instructor}</td>
-                <SeatsCell seats={parseInt(course.seats, 10)}>
-                  {course.seats}
-                </SeatsCell>
+        <CourseTableWrapper>
+          <CourseTable>
+            <TableHead>
+              <tr>
+                <th>Course</th>
+                <th>Sec</th>
+                <th>Days</th>
+                <th>Time</th>
+                <th>Room</th>
+                <th>Instructor</th>
+                <th>Seats</th>
               </tr>
-            ))}
-          </TableBody>
-        </CourseTable>
-        
-        <div style={{ marginTop: '10px', fontSize: '0.9rem', color: '#666' }}>
-          <div>Schedule Score: {schedule.score}</div>
-        </div>
+            </TableHead>
+            <TableBody>
+              {schedule.courses.map((course, idx) => (
+                <tr key={idx}>
+                  <CourseCodeCell>{course.course_code}</CourseCodeCell>
+                  <td>{course.section}</td>
+                  <td>{course.days}</td>
+                  <td>{course.start_time} - {course.end_time}</td>
+                  <td>{course.room}</td>
+                  <td>{course.instructor}</td>
+                  <SeatsCell seats={parseInt(course.seats, 10)}>
+                    {course.seats}
+                  </SeatsCell>
+                </tr>
+              ))}
+            </TableBody>
+          </CourseTable>
+        </CourseTableWrapper>
       </ScheduleContent>
     </ScheduleCard>
   );

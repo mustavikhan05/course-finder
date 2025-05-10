@@ -3,79 +3,127 @@ import styled from 'styled-components';
 import { useQuery } from '@tanstack/react-query';
 import { fetchAvailableCourses } from '../utils/api';
 
+// Assuming colors are accessible or redefined
+const colors = {
+  primary: '#007bff',
+  primaryDark: '#0056b3',
+  surface: '#ffffff',
+  background: '#f8f9fa', // Use the app background for form container
+  text: '#212529',
+  textSecondary: '#6c757d',
+  border: '#dee2e6',
+  inputFocusBorder: '#80bdff', // Lighter blue for focus
+  inputFocusShadow: 'rgba(0, 123, 255, 0.25)',
+  error: '#dc3545',
+  errorLight: '#f8d7da',
+  disabledBg: '#e9ecef',
+  disabledColor: '#6c757d',
+  // Department specific colors (can be further refined)
+  cseBlue: '#007bff', cseBlueLight: '#cfe2ff', cseBlueText: '#004085',
+  eeeGreen: '#28a745', eeeGreenLight: '#d4edda', eeeGreenText: '#155724',
+  matPurple: '#6f42c1', matPurpleLight: '#e2d9f3', matPurpleText: '#3d2363',
+  bioOrange: '#fd7e14', bioOrangeLight: '#ffe8d1', bioOrangeText: '#8b460b',
+  phyRed: '#dc3545', phyRedLight: '#f8d7da', phyRedText: '#721c24',
+  cheIndigo: '#6610f2', cheIndigoLight: '#e0cffc', cheIndigoText: '#360884',
+  engTeal: '#20c997', engTealLight: '#d1f2eb', engTealText: '#0c6b50',
+  otherGray: '#6c757d', otherGrayLight: '#e9ecef', otherGrayText: '#343a40',
+};
+
 const FormContainer = styled.form`
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  background-color: ${colors.surface};
+  border-radius: 12px; // Consistent with other cards
+  padding: 25px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+
+  @media (max-width: 767px) {
+    padding: 20px;
+  }
 `;
 
 const FormTitle = styled.h3`
-  margin-top: 0;
-  color: #333;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
+  font-size: 1.4rem;
+  color: ${colors.primary};
+  border-bottom: 1px solid ${colors.border};
+  padding-bottom: 15px;
+  margin-bottom: 25px;
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 `;
 
 const Label = styled.label`
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   font-weight: 500;
-  color: #555;
+  font-size: 0.95rem;
+  color: ${colors.text};
+`;
+
+const inputStyles = `
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid ${colors.border};
+  border-radius: 6px; // Softer radius
+  font-size: 0.95rem;
+  color: ${colors.text};
+  background-color: ${colors.surface};
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  
+  &:focus {
+    outline: none;
+    border-color: ${colors.inputFocusBorder};
+    box-shadow: 0 0 0 0.2rem ${colors.inputFocusShadow};
+  }
+
+  &::placeholder {
+    color: ${colors.textSecondary};
+    opacity: 0.8;
+  }
 `;
 
 const Input = styled.input`
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  
-  &:focus {
-    outline: none;
-    border-color: #4a90e2;
-    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
-  }
+  ${inputStyles}
 `;
 
 const Select = styled.select`
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  background-color: white;
-  
-  &:focus {
-    outline: none;
-    border-color: #4a90e2;
-    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
-  }
+  ${inputStyles}
+  appearance: none; // Custom arrow will be needed or use a library
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23${colors.textSecondary.substring(1)}%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E');
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 10px;
+  padding-right: 30px; // Make space for arrow
 `;
 
 const CheckboxContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin: 5px 0;
+  gap: 15px;
+  margin-top: 10px;
 `;
 
 const CheckboxLabel = styled.label`
   display: flex;
   align-items: center;
   cursor: pointer;
-  margin-right: 15px;
   user-select: none;
+  font-size: 0.9rem;
+  color: ${colors.text};
 `;
 
-const Checkbox = styled.input`
-  margin-right: 5px;
+const Checkbox = styled.input.attrs({ type: 'checkbox' })`
+  margin-right: 8px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: ${colors.primary};
+
+  &:focus {
+    outline: 2px solid ${colors.inputFocusBorder};
+    outline-offset: 1px;
+  }
 `;
 
 const CoursesTagInput = styled.div`
@@ -83,101 +131,71 @@ const CoursesTagInput = styled.div`
   flex-wrap: wrap;
   gap: 8px;
   padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: white;
-  min-height: 38px;
+  border: 1px solid ${colors.border};
+  border-radius: 6px;
+  background-color: ${colors.surface};
+  min-height: 42px; // Adjusted min-height
   align-items: center;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   
   &:focus-within {
     outline: none;
-    border-color: #4a90e2;
-    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+    border-color: ${colors.inputFocusBorder};
+    box-shadow: 0 0 0 0.2rem ${colors.inputFocusShadow};
   }
 `;
 
-// Get the department code from a course code
-const getDepartment = (course) => {
-  const match = course.match(/^([A-Z]{3})/);
-  return match ? match[1] : '';
+const getDepartmentColors = (course) => {
+  const dept = (course.match(/^([A-Z]{3})/) || [])[1];
+  switch (dept) {
+    case 'CSE': return { bg: colors.cseBlueLight, border: colors.cseBlue, text: colors.cseBlueText };
+    case 'EEE': return { bg: colors.eeeGreenLight, border: colors.eeeGreen, text: colors.eeeGreenText };
+    case 'MAT': return { bg: colors.matPurpleLight, border: colors.matPurple, text: colors.matPurpleText };
+    case 'BIO': return { bg: colors.bioOrangeLight, border: colors.bioOrange, text: colors.bioOrangeText };
+    case 'PHY': return { bg: colors.phyRedLight, border: colors.phyRed, text: colors.phyRedText };
+    case 'CHE': return { bg: colors.cheIndigoLight, border: colors.cheIndigo, text: colors.cheIndigoText };
+    case 'ENG': return { bg: colors.engTealLight, border: colors.engTeal, text: colors.engTealText };
+    default: return { bg: colors.otherGrayLight, border: colors.otherGray, text: colors.otherGrayText };
+  }
 };
 
-// Course badge with department color
 const CourseBadge = styled.span`
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 12px;
-  font-weight: bold;
-  color: white;
-  background-color: ${props => {
-    // Choose color based on course department
-    const dept = getDepartment(props.course);
-    if (dept === 'CSE') return '#4a90e2'; // Blue
-    if (dept === 'EEE') return '#50b83c'; // Green
-    if (dept === 'MAT') return '#8c4bff'; // Purple
-    if (dept === 'BIO') return '#f08a24'; // Orange
-    if (dept === 'PHY') return '#d8315b'; // Red
-    if (dept === 'CHE') return '#639'; // Indigo
-    if (dept === 'ENG') return '#4b8e8d'; // Teal
-    return '#8c8c8c'; // Gray for others
-  }};
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem; // Slightly smaller
+  font-weight: 600;
+  color: ${props => getDepartmentColors(props.course).text};
+  background-color: ${props => getDepartmentColors(props.course).bg};
+  border: 1px solid ${props => getDepartmentColors(props.course).border};
+  line-height: 1.2;
 `;
 
 const CourseTag = styled.div`
-  background-color: ${props => {
-    // Choose color based on course department
-    const dept = getDepartment(props.course);
-    if (dept === 'CSE') return '#e3f2fd'; // Light Blue
-    if (dept === 'EEE') return '#e8f5e9'; // Light Green
-    if (dept === 'MAT') return '#f3e5f5'; // Light Purple
-    if (dept === 'BIO') return '#fff3e0'; // Light Orange
-    if (dept === 'PHY') return '#ffebee'; // Light Red
-    if (dept === 'CHE') return '#e1e4f2'; // Light Indigo
-    if (dept === 'ENG') return '#e0f2f1'; // Light Teal
-    return '#f5f5f5'; // Light Gray for others
-  }};
-  border: 1px solid ${props => {
-    // Choose color based on course department
-    const dept = getDepartment(props.course);
-    if (dept === 'CSE') return '#bbdefb'; // Blue border
-    if (dept === 'EEE') return '#c8e6c9'; // Green border
-    if (dept === 'MAT') return '#e1bee7'; // Purple border
-    if (dept === 'BIO') return '#ffe0b2'; // Orange border
-    if (dept === 'PHY') return '#ffcdd2'; // Red border
-    if (dept === 'CHE') return '#c5cae9'; // Indigo border
-    if (dept === 'ENG') return '#b2dfdb'; // Teal border
-    return '#e0e0e0'; // Gray border for others
-  }};
-  border-radius: 4px;
-  padding: 2px 8px;
+  background-color: ${props => getDepartmentColors(props.course).bg};
+  border: 1px solid ${props => getDepartmentColors(props.course).border};
+  border-radius: 5px;
+  padding: 4px 10px;
   display: flex;
   align-items: center;
-  font-size: 14px;
-  color: ${props => {
-    // Text color based on department
-    const dept = getDepartment(props.course);
-    if (dept === 'CSE') return '#1565c0'; // Blue text
-    if (dept === 'EEE') return '#2e7d32'; // Green text
-    if (dept === 'MAT') return '#6a1b9a'; // Purple text
-    if (dept === 'BIO') return '#e65100'; // Orange text
-    if (dept === 'PHY') return '#c62828'; // Red text
-    if (dept === 'CHE') return '#283593'; // Indigo text
-    if (dept === 'ENG') return '#00695c'; // Teal text
-    return '#424242'; // Gray text for others
-  }};
+  font-size: 0.9rem;
+  color: ${props => getDepartmentColors(props.course).text};
+  font-weight: 500;
 `;
 
 const RemoveCourseBtn = styled.button`
   background: none;
   border: none;
-  color: #666;
-  margin-left: 5px;
+  color: currentColor; // Inherit color from CourseTag
+  opacity: 0.7;
+  margin-left: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 1.1rem; // Larger X
   padding: 0 3px;
+  line-height: 1;
   
   &:hover {
-    color: #c00;
+    opacity: 1;
+    color: ${colors.error};
   }
 `;
 
@@ -185,124 +203,161 @@ const CourseInput = styled.input`
   border: none;
   outline: none;
   flex: 1;
-  min-width: 120px;
-  font-size: 14px;
+  min-width: 150px; // Increased min-width
+  font-size: 0.95rem;
+  padding: 4px; // Add some padding within the input field
+  background-color: transparent;
+
+  &::placeholder {
+    color: ${colors.textSecondary};
+    opacity: 0.8;
+  }
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
+  flex-wrap: wrap; // Allow buttons to wrap
   justify-content: space-between;
-  margin-top: 20px;
+  gap: 10px; // Add gap for wrapped buttons
+  margin-top: 30px;
 `;
 
 const Button = styled.button`
-  padding: 10px 15px;
-  border-radius: 4px;
+  padding: 12px 20px;
+  border-radius: 6px;
   border: none;
   font-weight: 500;
+  font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-grow: 1; // Allow buttons to grow
+
+  @media (min-width: 500px) {
+    flex-grow: 0; // Don't grow on larger screens if space-between is enough
+  }
   
   &:disabled {
-    opacity: 0.6;
+    background-color: ${colors.disabledBg};
+    color: ${colors.disabledColor};
     cursor: not-allowed;
+    opacity: 0.7;
   }
 `;
 
 const SubmitButton = styled(Button)`
-  background-color: #4a90e2;
-  color: white;
+  background-color: ${colors.primary};
+  color: ${colors.surface};
   
   &:hover:not(:disabled) {
-    background-color: #3a80d2;
+    background-color: ${colors.primaryDark};
   }
 `;
 
 const ResetButton = styled(Button)`
-  background-color: #f0f0f0;
-  color: #666;
+  background-color: ${colors.surface};
+  color: ${colors.textSecondary};
+  border: 1px solid ${colors.border};
   
-  &:hover {
-    background-color: #e0e0e0;
+  &:hover:not(:disabled) {
+    background-color: ${colors.disabledBg};
+    border-color: ${colors.textSecondary};
   }
 `;
 
 const HelperText = styled.div`
-  font-size: 12px;
-  color: #888;
-  margin-top: 4px;
+  font-size: 0.85rem;
+  color: ${colors.textSecondary};
+  margin-top: 6px;
 `;
 
 const ErrorText = styled.div`
-  color: #c00;
-  font-size: 12px;
-  margin-top: 4px;
+  color: ${colors.error};
+  font-size: 0.85rem;
+  margin-top: 6px;
 `;
 
-// Dropdown components
 const DropdownList = styled.ul`
   position: absolute;
-  width: 100%;
-  max-height: 300px;
+  width: calc(100% - 2px); // Account for border
+  max-height: 250px; // Slightly reduced max-height
   overflow-y: auto;
-  margin: 0;
+  margin: 2px 0 0 0; // Small top margin
   padding: 0;
-  border: 1px solid #ddd;
-  border-top: none;
-  border-radius: 0 0 4px 4px;
-  background-color: white;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  z-index: 10;
+  border: 1px solid ${colors.border};
+  border-radius: 6px;
+  background-color: ${colors.surface};
+  box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+  z-index: 1000; // Ensure it's above other elements
   list-style: none;
 `;
 
 const DropdownItem = styled.li`
-  padding: 8px 12px;
+  padding: 10px 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  
-  &:hover {
-    background-color: #f5f8ff;
+  font-size: 0.9rem;
+  border-bottom: 1px solid ${colors.border};
+
+  &:last-child {
+    border-bottom: none;
   }
   
-  &.highlighted {
-    background-color: #e1f0fe;
+  &:hover, &.highlighted {
+    background-color: ${colors.primary};
+    color: ${colors.surface};
+    
+    ${CourseBadge} { // Adjust badge color on hover/highlight for visibility
+        background-color: ${colors.surface};
+        color: ${colors.primary};
+        border-color: ${colors.primary};
+    }
+    div[style*="color: #666"] { // Adjust subtitle color on hover
+        color: ${colors.surface} !important;
+        opacity: 0.8;
+    }
   }
 `;
 
 const InstructorRowContainer = styled.div`
   display: flex;
+  flex-wrap: wrap; // Allow wrapping
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   gap: 10px;
 `;
 
 const InstructorLabel = styled.div`
-  width: 80px;
-  font-size: 14px;
-  color: #555;
+  min-width: 80px; // Min-width for alignment
+  font-size: 0.9rem;
+  color: ${colors.text};
+  font-weight: 500;
+  padding-right: 5px;
+  flex-shrink: 0;
 `;
 
 const InstructorInputContainer = styled.div`
   flex: 1;
+  min-width: 200px; // Ensure select is not too small
   position: relative;
 `;
 
 const LoadingIndicator = styled.div`
   text-align: center;
-  padding: 15px;
-  color: #666;
+  padding: 20px;
+  color: ${colors.textSecondary};
   font-style: italic;
+  font-size: 0.95rem;
 `;
 
 const ErrorIndicator = styled.div`
-  padding: 10px;
-  margin-bottom: 15px;
-  color: #c00;
-  background-color: #fee;
-  border-radius: 4px;
-  border: 1px solid #fcc;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  color: ${colors.error};
+  background-color: ${colors.errorLight};
+  border: 1px solid ${colors.error};
+  border-radius: 6px;
+  font-size: 0.9rem;
 `;
 
 // Default constraints
@@ -341,11 +396,13 @@ const CourseDropdownItem = ({ course, title, onClick, isHighlighted }) => (
   <DropdownItem
     className={isHighlighted ? 'highlighted' : ''}
     onClick={onClick}
+    role="option"
+    aria-selected={isHighlighted}
   >
-    <CourseBadge course={course}>{getDepartment(course)}</CourseBadge>
-    <div style={{ marginLeft: 8 }}>
-      <div>{course}</div>
-      {title && <div style={{ fontSize: '11px', color: '#666' }}>{title}</div>}
+    <CourseBadge course={course}>{/* Content handled by CourseBadge styles */}</CourseBadge>
+    <div style={{ marginLeft: 10, flexGrow: 1 }}>
+      <div style={{ fontWeight: 500 }}>{course}</div>
+      {title && <div style={{ fontSize: '0.8rem', color: '#666' /* Original color, overridden by hover */ }}>{title}</div>}
     </div>
   </DropdownItem>
 );

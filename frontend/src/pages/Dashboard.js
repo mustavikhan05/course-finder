@@ -6,119 +6,188 @@ import StatusPanel from '../components/StatusPanel';
 import CourseConstraintsForm from '../components/CourseConstraintsForm';
 import { fetchSchedules, generateSchedules } from '../utils/api';
 
+// Use colors from App.js or define a similar palette if not directly accessible
+// For this example, I'll assume colors are accessible or redefined
+const colors = {
+  primary: '#007bff',
+  primaryDark: '#0056b3',
+  background: '#f8f9fa',
+  surface: '#ffffff',
+  text: '#212529',
+  textSecondary: '#6c757d',
+  error: '#dc3545',
+  success: '#28a745',
+  border: '#dee2e6',
+  errorLight: '#f8d7da',
+  successLight: '#d4edda',
+};
+
 const DashboardContainer = styled.div`
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
+  grid-template-columns: 1fr; // Mobile-first: single column
+  gap: 25px; // Increased gap
   
-  @media (min-width: 992px) {
+  @media (min-width: 768px) { // Tablet and above
+    grid-template-columns: 2fr 1fr; // Adjust ratio if needed
+  }
+
+  @media (min-width: 1024px) { // Desktop
     grid-template-columns: 3fr 1fr;
   }
 `;
 
 const MainContent = styled.div`
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  padding: 20px;
+  background-color: ${colors.surface};
+  border-radius: 12px; // Softer radius
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08); // Softer shadow
+  padding: 25px;
+
+  @media (max-width: 767px) {
+    padding: 20px;
+  }
 `;
 
-const SidePanel = styled.div`
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  padding: 20px;
+const SidePanel = styled.aside` // Changed to aside for semantics
+  background-color: ${colors.surface};
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 25px;
+  position: sticky; // Make side panel sticky on larger screens
+  top: 20px; // Adjust as needed based on header height
+  height: fit-content; // Only take up necessary height
+
+  @media (max-width: 767px) {
+    position: static; // Not sticky on mobile
+    padding: 20px;
+  }
 `;
 
 const LoadingMessage = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 300px;
-  font-size: 1.2rem;
-  color: #666;
+  min-height: 250px; // Adjusted height
+  font-size: 1.1rem; // Slightly smaller
+  color: ${colors.textSecondary};
+  text-align: center;
 `;
 
-const ErrorMessage = styled.div`
-  background-color: #fee;
-  border: 1px solid #f99;
-  border-radius: 4px;
-  padding: 15px;
+const MessageCardBase = styled.div`
+  border-radius: 8px;
+  padding: 20px;
   margin-bottom: 20px;
-  color: #c00;
+  border: 1px solid transparent;
   
   h4 {
     margin-top: 0;
     margin-bottom: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
   }
   
   p {
     margin-bottom: 5px;
+    font-size: 0.95rem;
   }
   
   .suggestion {
-    margin-top: 10px;
+    margin-top: 15px;
     font-style: italic;
+    font-size: 0.9rem;
+    opacity: 0.9;
   }
 `;
 
-const SuccessMessage = styled.div`
-  background-color: #e8f5e9;
-  border: 1px solid #a5d6a7;
-  border-radius: 4px;
-  padding: 15px;
-  margin-bottom: 20px;
-  color: #2e7d32;
+const ErrorMessage = styled(MessageCardBase)`
+  background-color: ${colors.errorLight};
+  border-color: ${colors.error};
+  color: ${colors.error};
+
+  h4 {
+    color: ${colors.error};
+  }
+  
+  p, .suggestion strong {
+    color: #721c24; // Darker red for better contrast on light red background
+  }
+`;
+
+const SuccessMessage = styled(MessageCardBase)`
+  background-color: ${colors.successLight};
+  border-color: ${colors.success};
+  color: #155724; // Darker green for better contrast
+
+  h4 {
+    color: #155724;
+  }
 `;
 
 const ToggleButtonGroup = styled.div`
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
+  align-items: center;
+  margin-bottom: 25px;
   gap: 10px;
+  flex-wrap: wrap; // Allow buttons to wrap on smaller screens
 `;
 
 const ToggleButton = styled.button`
-  padding: 10px 15px;
-  border-radius: 4px;
-  border: 1px solid #4a90e2;
-  background-color: ${props => props.active ? '#4a90e2' : 'white'};
-  color: ${props => props.active ? 'white' : '#4a90e2'};
+  padding: 10px 20px;
+  border-radius: 25px; // Pill shape
+  border: 1px solid ${props => props.active ? colors.primary : colors.border};
+  background-color: ${props => props.active ? colors.primary : colors.surface};
+  color: ${props => props.active ? colors.surface : colors.primary};
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-size: 0.9rem;
   
-  &:hover {
-    background-color: ${props => props.active ? '#3a80d2' : '#f0f8ff'};
+  &:hover:not(:disabled) {
+    background-color: ${props => props.active ? colors.primaryDark : '#e9ecef'};
+    border-color: ${props => props.active ? colors.primaryDark : colors.border};
+    color: ${props => props.active ? colors.surface : colors.primaryDark};
+  }
+
+  @media (max-width: 767px) {
+    padding: 8px 15px;
+    font-size: 0.85rem;
   }
 `;
 
 const ModeSwitchContainer = styled.div`
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 `;
 
 const ModeSwitch = styled.div`
   display: inline-flex;
-  background-color: #f0f4f8;
+  background-color: #e9ecef; // Lighter background for the switch itself
   border-radius: 30px;
   padding: 5px;
-  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 `;
 
 const ModeButton = styled.button`
-  padding: 8px 16px;
+  padding: 10px 20px;
   border-radius: 25px;
   border: none;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  background-color: ${props => props.active ? '#4a90e2' : 'transparent'};
-  color: ${props => props.active ? 'white' : '#555'};
+  transition: background-color 0.2s ease, color 0.2s ease;
+  background-color: ${props => props.active ? colors.primary : 'transparent'};
+  color: ${props => props.active ? colors.surface : colors.textSecondary};
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
 
-  &:hover {
-    background-color: ${props => props.active ? '#3a80d2' : '#e7edf5'};
+  &:hover:not(:disabled) {
+    background-color: ${props => props.active ? colors.primaryDark : '#dfe3e6'};
+    color: ${props => props.active ? colors.surface : colors.text};
+  }
+
+  @media (max-width: 767px) {
+    padding: 8px 15px;
+    font-size: 0.85rem;
   }
 `;
 
