@@ -49,11 +49,12 @@ This tool will help monitor course availability without needing to manually refr
 
 - [x] Create project structure with `main.py`, `scraper.py`, `filters.py`, and `scheduler.py` (May 10, 2023)
 - [x] Install required packages: `requests`, `beautifulsoup4`, `pandas`, `colorama`, `schedule` (May 10, 2023)
-- [ ] Update task status with timestamps when completed
+- [x] Update task status with timestamps when completed (May 15, 2023)
 - [ ] Mark tasks as "DONE" when I verify they work as expected
 - [x] Add clear docstrings and comments for each function (May 10, 2023)
 - [ ] If you have questions or need clarification, add "QUESTION: [your question]" above the relevant code
 - [ ] Get my approval before implementing any complex algorithms or changing the planned approach
+- [x] Commit changes at every logical point in development (May 15, 2023)
 
 ## 1. Web Scraping Module (`scraper.py`)
 
@@ -87,6 +88,20 @@ This tool will help monitor course availability without needing to manually refr
 - [x] Create function to filter just the requested courses (BIO103, CSE327, etc.) (May 10, 2023)
 - [x] Add data cleaning functions to standardize extracted information (May 10, 2023)
 - [x] Test scraper with sample page to verify extraction accuracy (May 10, 2023)
+- [x] Add support for cross-listed courses (e.g., CSE332/EEE336) (May 15, 2023)
+- [x] Successfully tested connection to NSU course offerings page (May 15, 2023)
+
+## Git Workflow
+
+- [x] Initialize git repository (May 15, 2023)
+- [x] Commit after completing each logical component (May 15, 2023)
+- [ ] Recommended commit points:
+  - [ ] After initial setup and configuration
+  - [x] After implementing and testing scraper (May 15, 2023)
+  - [ ] After implementing filters
+  - [ ] After implementing scheduler
+  - [ ] After implementing main application
+  - [ ] After each major feature or bug fix
 
 ## 2. Filter Implementation (`filters.py`)
 
@@ -142,7 +157,7 @@ This tool will help monitor course availability without needing to manually refr
 
 ## 5. Testing & Refinement
 
-- [ ] Test with real NSU webpage to verify scraping works correctly
+- [x] Test with real NSU webpage to verify scraping works correctly (May 15, 2023)
 - [x] Create test cases for various filter combinations (May 10, 2023)
 - [x] Add error handling for network issues or website changes (May 10, 2023)
 - [x] Create mock data for testing when actual website is unavailable (May 10, 2023)
@@ -165,3 +180,4 @@ This tool will help monitor course availability without needing to manually refr
 - Course time parsing will need careful attention as format may vary
 - When comparing schedules between runs, focus on changes in availability
 - Use clear, color-coded output to highlight changes
+- Commit code after each logical component is implemented and tested

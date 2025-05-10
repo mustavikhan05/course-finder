@@ -6,7 +6,7 @@ This module contains configuration settings for the NSU Course Scheduler applica
 """
 
 # URL for the NSU course offerings page
-NSU_COURSE_URL = "https://rds2.northsouth.edu/index.php/common/showofferings"
+NSU_COURSE_URL = "https://rds2.northsouth.edu/index.php/common/showofferedcourses"
 
 # Target courses to monitor
 TARGET_COURSES = [

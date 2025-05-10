@@ -31,6 +31,12 @@ def fetch_course_data():
     """
     html_content = fetch_page()
     courses_df = parse_html_to_dataframe(html_content)
+    
+    # Print number of courses before filtering
+    print(f"Total courses fetched before filtering: {len(courses_df)}")
+    print("\nAvailable course codes in raw data:")
+    print(courses_df['course_code'].unique())
+    
     courses_df = filter_target_courses(courses_df)
     return courses_df
 
@@ -243,9 +249,24 @@ def filter_target_courses(df):
     Returns:
         pandas.DataFrame: Filtered DataFrame with only target courses
     """
-    # Check if course_code is in the target courses list
-    mask = df['course_code'].isin(TARGET_COURSES)
-    return df[mask]
+    # Create a mapping for cross-listed courses
+    crosslisted_courses = {
+        "CSE332/EEE336": "CSE332",
+        "CSE332L/EEE336L": "CSE332L"
+    }
+    
+    # Replace cross-listed course codes with their standard codes
+    df['filtered_code'] = df['course_code'].map(lambda x: crosslisted_courses.get(x, x))
+    
+    # Check if filtered_code is in the target courses list
+    mask = df['filtered_code'].isin(TARGET_COURSES)
+    
+    # Drop the temporary column
+    result = df[mask].copy()
+    if 'filtered_code' in result.columns:
+        result.drop('filtered_code', axis=1, inplace=True)
+    
+    return result
 
 def save_course_data(df, filename='data/latest_courses.csv'):
     """
