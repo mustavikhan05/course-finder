@@ -184,3 +184,72 @@ The system is now fully functional for monitoring available course sections and 
 - When comparing schedules between runs, focuses on changes in availability
 - Uses clear, color-coded output to highlight changes
 - Code organized into logical components for maintainability
+
+## 8. Web App Dashboard Implementation
+
+- [ ] Set up a Flask API backend to serve schedule data
+- [ ] Create a modern React frontend application
+- [ ] Implement the main dashboard page with React components
+- [ ] Set up auto-refresh using React hooks (every 30 seconds)
+- [ ] Create API endpoints to provide real-time schedule data
+- [ ] Implement seat availability highlighting with styled components
+- [ ] Add timestamp display showing last data refresh time
+- [ ] Create a responsive table view for schedules using React Table
+- [ ] Implement day-wise grouping of courses in each schedule
+- [ ] Add filter controls as React components
+- [ ] Create a "favorites" feature using browser localStorage
+- [ ] Add browser notifications for seat availability changes
+- [ ] Set up proper error handling and loading states
+
+## Web App Features (Priority Order)
+
+1. **Core Dashboard:**
+   - Modern React UI showing available schedules
+   - Real-time updates of seat availability
+   - Color-coded highlighting of changes since last refresh
+   - Warning indicators for sections with low seat counts (≤ 3)
+
+2. **Interactive Schedule View:**
+   - React-based tabular display with sorting and filtering
+   - Grouping of courses by day for better readability
+   - Expandable rows for detailed course information
+   - Optional: Visual calendar representation of schedule
+
+3. **Status Panel:**
+   - Last refresh timestamp and auto-refresh countdown
+   - Total available schedules and filtering statistics
+   - Summary of courses with limited seat availability
+   - System status indicators
+
+4. **User Features:**
+   - Ability to save favorite schedules locally
+   - Browser notifications when marked schedules change
+   - Customizable refresh rate
+   - Filter adjustment controls
+
+## Web App Technical Approach
+
+1. **Backend (Flask API):**
+   - Reuse existing scraper, filters, and scheduler modules
+   - Create simple REST API endpoints for fetching schedule data
+   - Implement caching to reduce load on NSU's website
+   - JSON responses with schedule data and metadata
+
+2. **Frontend (React):**
+   - Modern React with functional components and hooks
+   - Styled-components or Tailwind CSS for styling
+   - React Query for data fetching and caching
+   - Responsive design for mobile and desktop
+
+3. **Data Flow:**
+   - Backend scheduled task fetches data every few minutes
+   - React frontend polls API endpoint every 30 seconds
+   - State management to track and highlight changes
+   - LocalStorage for persisting user preferences
+
+4. **Deployment Strategy:**
+   - Backend: Simple Flask server or serverless function
+   - Frontend: Static site hosting (Netlify, Vercel, or GitHub Pages)
+   - Separate deployments for easier maintenance
+
+Implementation will leverage modern React patterns and hooks to create a clean, responsive UI that clearly displays seat availability changes in real-time while maintaining simplicity.
