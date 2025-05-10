@@ -6,7 +6,6 @@ import StatusPanel from '../components/StatusPanel';
 import CourseConstraintsForm from '../components/CourseConstraintsForm';
 import { fetchSchedules, generateSchedules } from '../utils/api';
 import api from '../utils/api';
-import ScheduleCard from '../components/ScheduleCard';
 
 // Use colors from App.js or define a similar palette if not directly accessible
 // For this example, I'll assume colors are accessible or redefined
