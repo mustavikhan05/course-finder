@@ -17,7 +17,7 @@ Hard constraints are implemented as filters during schedule generation.
 import pandas as pd
 import re
 from itertools import product
-from filters import has_same_section_cse332, count_days_in_schedule
+from .filters import has_same_section_cse332, count_days_in_schedule
 
 def generate_schedules(filtered_df):
     """
@@ -464,7 +464,7 @@ def format_schedule(schedule):
 if __name__ == "__main__":
     # For testing
     import pandas as pd
-    from filters import apply_filters
+    from .filters import apply_filters
     
     # Create test data
     test_data = {

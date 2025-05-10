@@ -187,8 +187,37 @@ The system is now fully functional for monitoring available course sections and 
 
 ## 8. Web App Dashboard Implementation
 
-- [ ] Set up a Flask API backend to serve schedule data
-- [ ] Create a modern React frontend application
+### Project Structure Refactoring
+
+Before implementing the web app, the project structure needs to be refactored to fix import issues:
+
+- [x] Reorganize the backend to use a proper Python package structure:
+  - [x] Create a `nsu_scheduler` package with proper `__init__.py` files
+  - [x] Fix relative imports to use absolute imports
+  - [x] Update import paths in all modules
+  - [ ] Create a setup.py file for proper package installation
+
+- [x] Simplify the directory structure:
+  - [x] Move core modules (scraper.py, filters.py, scheduler.py) into the package
+  - [x] Create a proper API structure with Flask Blueprint
+  - [x] Ensure configuration is loaded correctly
+
+- [ ] Set up development environment:
+  - [x] Create separate requirements files for backend and frontend
+  - [x] Set up development scripts for both components (May 10, 2025)
+  - [ ] Create proper documentation for running the application
+
+**Note:** The project currently maintains two implementations:
+1. CLI Interface (in src/) - Working implementation using console output
+2. Web API Interface (in backend/) - Flask API version of the same functionality
+
+Both implementations use the same core logic (scraper.py, filters.py, scheduler.py) which has been duplicated between src/ and backend/core/ directories. This allows both interfaces to function independently while we develop the web application.
+
+### Web App Implementation
+
+- [x] Set up a Flask API backend to serve schedule data
+- [x] Create a modern React frontend application
+- [x] Set up Flask app initialization with CORS support (May 10, 2025)
 - [ ] Implement the main dashboard page with React components
 - [ ] Set up auto-refresh using React hooks (every 30 seconds)
 - [ ] Create API endpoints to provide real-time schedule data

@@ -1,5 +1,4 @@
 """
-NSU Course Scheduler - Main Package
-
-This package contains modules for the NSU Course Scheduler application.
+NSU Course Scheduler - Core Package
+This package contains the core functionality for the scheduler system.
 """ 

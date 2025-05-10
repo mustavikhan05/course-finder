@@ -6,9 +6,15 @@ This module defines the API routes for the Flask backend.
 from flask import Blueprint, jsonify, current_app
 from flask_cors import cross_origin
 import time
-from ..core.scraper import fetch_course_data
-from ..core.filters import apply_filters
-from ..core.scheduler import generate_schedules, score_schedule
+import sys
+import os
+
+# Add parent directory to path to allow imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from core.scraper import fetch_course_data
+from core.filters import apply_filters
+from core.scheduler import generate_schedules, score_schedule
 
 # Create a blueprint for the API
 api_bp = Blueprint('api', __name__)
