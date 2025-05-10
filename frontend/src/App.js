@@ -2,19 +2,22 @@ import React from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
 import Dashboard from './pages/Dashboard';
 
-// Define a modern color palette
+// Define a modern color palette matching the CourseConstraintsForm
 const colors = {
-  primary: '#007bff', // A vibrant blue
-  primaryDark: '#0056b3',
-  secondary: '#6c757d', // A muted gray for secondary text/elements
-  background: '#f8f9fa', // Light gray background for the app
-  surface: '#ffffff', // White for card backgrounds, inputs, etc.
-  text: '#212529', // Dark gray for primary text
-  textSecondary: '#6c757d',
-  error: '#dc3545',
-  success: '#28a745',
-  warning: '#ffc107',
-  border: '#dee2e6',
+  primary: '#4361EE', // Vibrant blue
+  primaryDark: '#3A56D4',
+  primaryLight: '#D8E1FF',
+  secondary: '#FF5E78', // Hot pink accent
+  secondaryLight: '#FFD8DF',
+  surface: '#ffffff',
+  background: '#f8f9fa',
+  text: '#2D3748', // Darker text for better contrast
+  textSecondary: '#718096',
+  border: '#E2E8F0',
+  error: '#FF5E78',
+  success: '#38B2AC',
+  warning: '#F6AD55',
+  border: '#E2E8F0',
 };
 
 const GlobalStyle = createGlobalStyle`
@@ -54,7 +57,8 @@ const GlobalStyle = createGlobalStyle`
 
   h1, h2, h3, h4, h5, h6 {
     margin-top: 0;
-    font-weight: 600; // Slightly bolder headings
+    font-weight: 600;
+    color: ${colors.text};
   }
   
   /* Prevent overflows */
@@ -62,40 +66,69 @@ const GlobalStyle = createGlobalStyle`
     max-width: 100%;
     height: auto;
   }
+  
+  /* Add smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Add custom selection styling */
+  ::selection {
+    background-color: ${colors.primaryLight};
+    color: ${colors.primaryDark};
+  }
 `;
 
 const AppContainer = styled.div`
-  max-width: 1300px; // Slightly wider max-width
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 25px 20px;
   
   @media (max-width: 768px) {
-    padding: 15px; // Less padding on mobile
+    padding: 20px 15px;
   }
 `;
 
 const Header = styled.header`
-  margin-bottom: 40px; // Increased spacing
-  padding-bottom: 20px;
-  border-bottom: 1px solid ${colors.border};
+  margin-bottom: 40px;
+  padding-bottom: 25px;
+  border-bottom: 2px solid ${colors.primaryLight};
   text-align: center;
+  position: relative;
+  
+  &::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -2px;
+    width: 100px;
+    height: 4px;
+    background-color: ${colors.primary};
+    transform: translateX(-50%);
+    border-radius: 2px;
+  }
 `;
 
 const Title = styled.h1`
-  color: ${colors.primary};
-  font-size: 2.5rem; // Larger title
+  font-size: 2.8rem;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
 
   @media (max-width: 768px) {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
 `;
 
 const Subtitle = styled.h2`
   color: ${colors.textSecondary};
-  font-size: 1.1rem; // Adjusted size
-  font-weight: 400; // Lighter subtitle
+  font-size: 1.2rem;
+  font-weight: 400;
+  margin-top: 0;
 `;
 
 function App() {

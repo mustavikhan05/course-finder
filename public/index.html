@@ -1,7 +1,7 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no" />
     <meta name="theme-color" content="#000000" />
     <meta
       name="description"
@@ -24,5 +24,19 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>NSU Course Scheduler</title>
+    <!-- Add touch-action CSS to prevent pinch zoom -->
+    <style>
+      html, body {
+        touch-action: pan-x pan-y; /* Disable pinch zooming while allowing scrolling */
+        width: 100%;
+        overflow-x: hidden;
+        /* Remove the position: fixed which prevents scrolling */
+      }
+      
+      /* Add touch-action to all elements */
+      * {
+        touch-action: pan-x pan-y;
+      }
+    </style>
   </head>
   <body> 

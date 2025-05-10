@@ -3,66 +3,86 @@ import styled from 'styled-components';
 import { useQuery } from '@tanstack/react-query';
 import { fetchAvailableCourses } from '../utils/api';
 
-// Assuming colors are accessible or redefined
+// Update colors to be more vibrant and modern
 const colors = {
-  primary: '#007bff',
-  primaryDark: '#0056b3',
+  primary: '#4361EE', // Vibrant blue
+  primaryDark: '#3A56D4',
+  primaryLight: '#D8E1FF',
+  secondary: '#FF5E78', // Hot pink accent
+  secondaryLight: '#FFD8DF',
   surface: '#ffffff',
-  background: '#f8f9fa', // Use the app background for form container
-  text: '#212529',
-  textSecondary: '#6c757d',
-  border: '#dee2e6',
-  inputFocusBorder: '#80bdff', // Lighter blue for focus
-  inputFocusShadow: 'rgba(0, 123, 255, 0.25)',
-  error: '#dc3545',
-  errorLight: '#f8d7da',
-  disabledBg: '#e9ecef',
-  disabledColor: '#6c757d',
-  // Department specific colors (can be further refined)
-  cseBlue: '#007bff', cseBlueLight: '#cfe2ff', cseBlueText: '#004085',
-  eeeGreen: '#28a745', eeeGreenLight: '#d4edda', eeeGreenText: '#155724',
-  matPurple: '#6f42c1', matPurpleLight: '#e2d9f3', matPurpleText: '#3d2363',
-  bioOrange: '#fd7e14', bioOrangeLight: '#ffe8d1', bioOrangeText: '#8b460b',
-  phyRed: '#dc3545', phyRedLight: '#f8d7da', phyRedText: '#721c24',
-  cheIndigo: '#6610f2', cheIndigoLight: '#e0cffc', cheIndigoText: '#360884',
-  engTeal: '#20c997', engTealLight: '#d1f2eb', engTealText: '#0c6b50',
-  otherGray: '#6c757d', otherGrayLight: '#e9ecef', otherGrayText: '#343a40',
+  background: '#f8f9fa',
+  text: '#2D3748', // Darker text for better contrast
+  textSecondary: '#718096',
+  border: '#E2E8F0',
+  inputFocusBorder: '#4361EE',
+  inputFocusShadow: 'rgba(67, 97, 238, 0.25)',
+  error: '#FF5E78',
+  errorLight: '#FFD8DF',
+  success: '#38B2AC',
+  disabledBg: '#EDF2F7',
+  disabledColor: '#718096',
+  // Department specific colors (more vibrant)
+  cseBlue: '#4361EE', cseBlueLight: '#D8E1FF', cseBlueText: '#2A4287',
+  eeeGreen: '#38B2AC', eeeGreenLight: '#D0F2F0', eeeGreenText: '#1F6D68',
+  matPurple: '#805AD5', matPurpleLight: '#E9DEFF', matPurpleText: '#553C9A',
+  bioOrange: '#ED8936', bioOrangeLight: '#FEEBC8', bioOrangeText: '#9C4221',
+  phyRed: '#F56565', phyRedLight: '#FED7D7', phyRedText: '#C53030',
+  cheIndigo: '#667EEA', cheIndigoLight: '#EBF4FF', cheIndigoText: '#434190',
+  engTeal: '#319795', engTealLight: '#B2F5EA', engTealText: '#285E61',
+  otherGray: '#718096', otherGrayLight: '#EDF2F7', otherGrayText: '#2D3748',
 };
 
+// More modern card styling with subtle gradient and shadow
 const FormContainer = styled.form`
-  background-color: ${colors.surface};
-  border-radius: 12px; // Consistent with other cards
-  padding: 25px;
+  background: linear-gradient(135deg, ${colors.surface} 0%, ${colors.primaryLight} 100%);
+  border-radius: 16px;
+  padding: 28px;
   margin-bottom: 30px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px rgba(67, 97, 238, 0.07), 0 5px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid ${colors.primaryLight};
 
   @media (max-width: 767px) {
-    padding: 20px;
-    border-radius: 10px; // Slightly smaller radius on mobile
+    padding: 22px;
+    border-radius: 12px;
   }
 `;
 
+// More modern section titles
 const FormTitle = styled.h3`
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   color: ${colors.primary};
-  border-bottom: 1px solid ${colors.border};
+  border-bottom: 2px solid ${colors.primaryLight};
   padding-bottom: 15px;
-  margin-bottom: 25px;
+  margin-bottom: 28px;
+  font-weight: 700;
   
   @media (max-width: 480px) {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     padding-bottom: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 22px;
   }
 `;
 
 const FormSectionTitle = styled.h4`
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   color: ${colors.text};
-  margin-top: 30px;
-  margin-bottom: 15px;
+  margin-top: 35px;
+  margin-bottom: 18px;
   padding-bottom: 8px;
-  border-bottom: 1px dashed ${colors.border};
+  border-bottom: 1px dashed ${colors.primaryLight};
+  position: relative;
+  
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 50px;
+    height: 3px;
+    background-color: ${colors.primary};
+    border-radius: 2px;
+  }
 `;
 
 const FormGrid = styled.div`
@@ -263,88 +283,58 @@ const DayPatternCheckbox = ({ id, checked, onChange, children }) => (
   </DayPatternLabel>
 );
 
+// Update course tag input for a more modern look
 const CoursesTagInput = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 8px;
+  padding: 12px;
   border: 1px solid ${colors.border};
-  border-radius: 6px;
+  border-radius: 12px;
   background-color: ${colors.surface};
-  min-height: 42px; // Adjusted min-height
+  min-height: 50px;
   align-items: center;
-  cursor: text; // Add cursor: text to indicate it's clickable
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  cursor: text;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
   
   &:focus-within {
     outline: none;
-    border-color: ${colors.inputFocusBorder};
-    box-shadow: 0 0 0 0.2rem ${colors.inputFocusShadow};
+    border-color: ${colors.primary};
+    box-shadow: 0 0 0 3px ${colors.primaryLight};
   }
 `;
 
-const getDepartmentColors = (course) => {
-  const dept = (course.match(/^([A-Z]{3})/) || [])[1];
-  switch (dept) {
-    case 'CSE': return { bg: colors.cseBlueLight, border: colors.cseBlue, text: colors.cseBlueText };
-    case 'EEE': return { bg: colors.eeeGreenLight, border: colors.eeeGreen, text: colors.eeeGreenText };
-    case 'MAT': return { bg: colors.matPurpleLight, border: colors.matPurple, text: colors.matPurpleText };
-    case 'BIO': return { bg: colors.bioOrangeLight, border: colors.bioOrange, text: colors.bioOrangeText };
-    case 'PHY': return { bg: colors.phyRedLight, border: colors.phyRed, text: colors.phyRedText };
-    case 'CHE': return { bg: colors.cheIndigoLight, border: colors.cheIndigo, text: colors.cheIndigoText };
-    case 'ENG': return { bg: colors.engTealLight, border: colors.engTeal, text: colors.engTealText };
-    default: return { bg: colors.otherGrayLight, border: colors.otherGray, text: colors.otherGrayText };
-  }
-};
-
-const CourseBadge = styled.span`
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem; // Slightly smaller
-  font-weight: 600;
-  color: ${props => getDepartmentColors(props.course).text};
-  background-color: ${props => getDepartmentColors(props.course).bg};
-  border: 1px solid ${props => getDepartmentColors(props.course).border};
-  line-height: 1.2;
-`;
-
+// More vibrant course tags
 const CourseTag = styled.div`
   background-color: ${props => getDepartmentColors(props.course).bg};
-  border: 1px solid ${props => getDepartmentColors(props.course).border};
-  border-radius: 5px;
-  padding: 4px 10px;
+  border: none;
+  border-radius: 30px;
+  padding: 6px 12px;
   display: flex;
   align-items: center;
   font-size: 0.9rem;
   color: ${props => getDepartmentColors(props.course).text};
-  font-weight: 500;
-`;
-
-const RemoveCourseBtn = styled.button`
-  background: none;
-  border: none;
-  color: currentColor; // Inherit color from CourseTag
-  opacity: 0.7;
-  margin-left: 6px;
-  cursor: pointer;
-  font-size: 1.1rem; // Larger X
-  padding: 0 3px;
-  line-height: 1;
+  font-weight: 600;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
   
   &:hover {
-    opacity: 1;
-    color: ${colors.error};
+    transform: translateY(-1px);
+    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.1);
   }
 `;
 
+// Nicer course input
 const CourseInput = styled.input`
   border: none;
   outline: none;
   flex: 1;
-  min-width: 150px; // Increased min-width
+  min-width: 200px;
   font-size: 0.95rem;
-  padding: 4px; // Add some padding within the input field
+  padding: 8px 4px;
   background-color: transparent;
+  color: ${colors.text};
 
   &::placeholder {
     color: ${colors.textSecondary};
@@ -418,18 +408,19 @@ const ErrorText = styled.div`
   margin-top: 6px;
 `;
 
+// Enhance dropdown styling
 const DropdownList = styled.ul`
   position: absolute;
-  width: calc(100% - 2px); // Account for border
-  max-height: 250px; // Slightly reduced max-height
+  width: calc(100% - 2px);
+  max-height: 300px;
   overflow-y: auto;
-  margin: 2px 0 0 0; // Small top margin
-  padding: 0;
-  border: 1px solid ${colors.border};
-  border-radius: 6px;
+  margin: 5px 0 0 0;
+  padding: 6px 0;
+  border: none;
+  border-radius: 12px;
   background-color: ${colors.surface};
-  box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-  z-index: 1000; // Ensure it's above other elements
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  z-index: 1500; // Higher z-index
   list-style: none;
   
   /* Custom scrollbar for better UX */
@@ -438,23 +429,25 @@ const DropdownList = styled.ul`
   }
   
   &::-webkit-scrollbar-track {
-    background: ${colors.lightGray || '#f1f1f1'};
+    background: ${colors.background};
     border-radius: 3px;
   }
   
   &::-webkit-scrollbar-thumb {
-    background-color: ${colors.mediumGray || '#ddd'};
+    background-color: ${colors.primary};
     border-radius: 3px;
+    opacity: 0.7;
   }
 `;
 
+// More colorful dropdown items
 const DropdownItem = styled.li`
-  padding: 10px 12px;
+  padding: 12px 15px;
   cursor: pointer;
   display: flex;
   align-items: center;
   font-size: 0.9rem;
-  border-bottom: 1px solid ${colors.border};
+  transition: all 0.2s ease;
 
   &:last-child {
     border-bottom: none;
@@ -471,7 +464,7 @@ const DropdownItem = styled.li`
     }
     div[style*="color: #666"] { // Adjust subtitle color on hover
         color: ${colors.surface} !important;
-        opacity: 0.8;
+        opacity: 0.9;
     }
   }
 `;
@@ -558,14 +551,16 @@ const TimeDisplay = styled.div`
   display: flex;
   align-items: center;
   cursor: pointer;
-  padding-right: 30px; // Make room for the arrow
+  padding-right: 30px;
   background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23${colors.textSecondary.substring(1)}%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E');
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 10px;
+  transition: all 0.2s ease;
   
   &:hover {
     border-color: ${colors.primary};
+    box-shadow: 0 0 0 1px ${colors.primaryLight};
   }
   
   @media (max-width: 480px) {
@@ -579,10 +574,10 @@ const TimeDropdown = styled.div`
   max-height: 300px;
   overflow-y: auto;
   background-color: ${colors.surface};
-  border: 1px solid ${colors.border};
-  border-radius: 6px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-  z-index: 1000;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  z-index: 1500;
   margin-top: 4px;
   
   /* Custom scrollbar for better UX */
@@ -591,12 +586,12 @@ const TimeDropdown = styled.div`
   }
   
   &::-webkit-scrollbar-track {
-    background: ${colors.lightGray || '#f1f1f1'};
+    background: ${colors.background};
     border-radius: 3px;
   }
   
   &::-webkit-scrollbar-thumb {
-    background-color: ${colors.mediumGray || '#ddd'};
+    background-color: ${colors.primary};
     border-radius: 3px;
   }
 `;
@@ -622,34 +617,17 @@ const TimeOption = styled.div`
   }
 `;
 
-// A custom time selector component
-const CustomTimeSelector = ({ value, onChange, options }) => {
+// A custom time selector component with update for global overlay
+const CustomTimeSelector = ({ value, onChange, options, onOpenCallback }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
   
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setShowDropdown(false);
-      }
-    };
-    
-    if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showDropdown]);
-  
   // Toggle dropdown
   const toggleDropdown = () => {
-    // Add a small delay when opening to prevent immediate toggle
     if (!showDropdown) {
       setTimeout(() => {
         setShowDropdown(true);
+        if (onOpenCallback) onOpenCallback();
       }, 50);
     } else {
       setShowDropdown(false);
@@ -661,6 +639,13 @@ const CustomTimeSelector = ({ value, onChange, options }) => {
     onChange(option);
     setShowDropdown(false);
   };
+  
+  // Close dropdown when global overlay is clicked
+  useEffect(() => {
+    if (!showGlobalOverlay && showDropdown) {
+      setShowDropdown(false);
+    }
+  }, [showGlobalOverlay]);
   
   return (
     <TimeSelector ref={dropdownRef}>
@@ -684,6 +669,17 @@ const CustomTimeSelector = ({ value, onChange, options }) => {
     </TimeSelector>
   );
 };
+
+// Create a global overlay to catch first click outside dropdowns
+const GlobalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background-color: transparent;
+`;
 
 function CourseConstraintsForm({ onSubmit, isLoading }) {
   // Fetch available courses from API
@@ -936,167 +932,190 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
     }
   };
   
-  // Update the dropdown showing logic to fix timing issues
+  // Add state for global overlay
+  const [showGlobalOverlay, setShowGlobalOverlay] = useState(false);
+  
+  // Update dropdown show logic to include overlay
   const handleDropdownShow = () => {
     // Small timeout to prevent immediate re-opening when closing another dropdown
     setTimeout(() => {
       setShowCourseDropdown(true);
+      setShowGlobalOverlay(true);
     }, 50);
+  };
+  
+  // Handle overlay click to close dropdowns
+  const handleOverlayClick = () => {
+    setShowCourseDropdown(false);
+    setShowGlobalOverlay(false);
+  };
+  
+  // Override the existing handleInputChange function to also handle overlay for custom dropdowns
+  const handleTimeDropdownShow = () => {
+    setShowGlobalOverlay(true);
   };
 
   return (
-    <FormContainer onSubmit={handleSubmit}>
-      <FormTitle>Course Schedule Generator</FormTitle>
-      
-      {isLoadingCourses && (
-        <LoadingIndicator>Loading available courses and instructors...</LoadingIndicator>
-      )}
-      
-      {isCoursesError && (
-        <ErrorIndicator>
-          Error loading course data. Please try again later.
-        </ErrorIndicator>
-      )}
-      
-      <FormSectionTitle>Course Selection</FormSectionTitle>
-      <FormGroup>
-        <Label htmlFor="required_courses">Select Your Courses:</Label>
-        <CoursesTagInput onClick={handleContainerClick}>
-          {constraints.required_courses.map(course => (
-            <CourseTag key={course} course={course}>
-              {course}
-              <RemoveCourseBtn 
-                type="button" 
-                onClick={() => handleCourseRemove(course)}
-                aria-label={`Remove ${course}`}
-              >
-                ×
-              </RemoveCourseBtn>
-            </CourseTag>
-          ))}
-          <div ref={courseDropdownRef} style={{ flex: 1, position: 'relative' }}>
-            <CourseInput
-              ref={courseInputRef}
-              id="course_input"
-              value={courseInput}
-              onChange={handleCourseInputChange}
-              onKeyDown={handleCourseInputKeyDown}
-              onFocus={handleDropdownShow}
-              placeholder="Type course code (e.g., CSE327)..."
-              autoComplete="off"
-            />
-            {showCourseDropdown && filteredCourses.length > 0 && (
-              <DropdownList>
-                {filteredCourses.map(course => (
-                  <DropdownItem
-                    key={course}
-                    onClick={() => handleCourseSelect(course)}
-                  >
-                    <CourseBadge course={course}>{course}</CourseBadge>
-                    <div style={{ marginLeft: 8, color: '#666', fontSize: '0.85em' }}>{getCourseTitle(course)}</div>
-                  </DropdownItem>
-                ))}
-              </DropdownList>
-            )}
-          </div>
-        </CoursesTagInput>
-        <HelperText>Add all courses you want to take this semester</HelperText>
-        {errors.required_courses && <ErrorText>{errors.required_courses}</ErrorText>}
-      </FormGroup>
-      
-      <FormSectionTitle>Schedule Preferences</FormSectionTitle>
-      <FormGrid>
+    <>
+      {showGlobalOverlay && <GlobalOverlay onClick={handleOverlayClick} />}
+      <FormContainer onSubmit={handleSubmit}>
+        <FormTitle>Course Schedule Generator</FormTitle>
+        
+        {isLoadingCourses && (
+          <LoadingIndicator>Loading available courses and instructors...</LoadingIndicator>
+        )}
+        
+        {isCoursesError && (
+          <ErrorIndicator>
+            Error loading course data. Please try again later.
+          </ErrorIndicator>
+        )}
+        
+        <FormSectionTitle>Course Selection</FormSectionTitle>
         <FormGroup>
-          <Label htmlFor="start_time">Earliest Class Start Time:</Label>
-          <CustomTimeSelector
-            value={constraints.start_time_constraint}
-            onChange={(value) => handleInputChange('start_time_constraint', value)}
-            options={TIME_OPTIONS}
-          />
-          <HelperText>Classes will not start before this time</HelperText>
+          <Label htmlFor="required_courses">Select Your Courses:</Label>
+          <CoursesTagInput onClick={handleContainerClick}>
+            {constraints.required_courses.map(course => (
+              <CourseTag key={course} course={course}>
+                {course}
+                <RemoveCourseBtn 
+                  type="button" 
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent triggering container click
+                    handleCourseRemove(course);
+                  }}
+                  aria-label={`Remove ${course}`}
+                >
+                  ×
+                </RemoveCourseBtn>
+              </CourseTag>
+            ))}
+            <div ref={courseDropdownRef} style={{ flex: 1, position: 'relative' }}>
+              <CourseInput
+                ref={courseInputRef}
+                id="course_input"
+                value={courseInput}
+                onChange={handleCourseInputChange}
+                onKeyDown={handleCourseInputKeyDown}
+                onFocus={handleDropdownShow}
+                placeholder="Type course code..."
+                autoComplete="off"
+              />
+              {showCourseDropdown && filteredCourses.length > 0 && (
+                <DropdownList>
+                  {filteredCourses.map(course => (
+                    <DropdownItem
+                      key={course}
+                      onClick={() => handleCourseSelect(course)}
+                    >
+                      <CourseBadge course={course}>{course}</CourseBadge>
+                      <div style={{ marginLeft: 8, color: '#666', fontSize: '0.85em' }}>{getCourseTitle(course)}</div>
+                    </DropdownItem>
+                  ))}
+                </DropdownList>
+              )}
+            </div>
+          </CoursesTagInput>
+          <HelperText>Add all courses you want to take this semester</HelperText>
+          {errors.required_courses && <ErrorText>{errors.required_courses}</ErrorText>}
+        </FormGroup>
+        
+        <FormSectionTitle>Schedule Preferences</FormSectionTitle>
+        <FormGrid>
+          <FormGroup>
+            <Label htmlFor="start_time">Earliest Class Start Time:</Label>
+            <CustomTimeSelector
+              value={constraints.start_time_constraint}
+              onChange={(value) => handleInputChange('start_time_constraint', value)}
+              options={TIME_OPTIONS}
+              onOpenCallback={handleTimeDropdownShow}
+            />
+            <HelperText>Classes will not start before this time</HelperText>
+          </FormGroup>
+          
+          <FormGroup>
+            <Label>Maximum Days per Week:</Label>
+            <CustomTimeSelector
+              value={`${constraints.max_days} Days`}
+              onChange={(value) => handleInputChange('max_days', parseInt(value.split(' ')[0]))}
+              options={["2 Days", "3 Days", "4 Days", "5 Days", "6 Days"]}
+              onOpenCallback={handleTimeDropdownShow}
+            />
+            <HelperText>Maximum number of different days you want to have classes</HelperText>
+          </FormGroup>
+        </FormGrid>
+        
+        <FormGroup>
+          <Label>Preferred Day Patterns:</Label>
+          <CheckboxContainer>
+            {DAY_PATTERNS.map(pattern => (
+              <DayPatternCheckbox
+                key={pattern.value}
+                id={`pattern-${pattern.value}`}
+                checked={constraints.day_pattern.includes(pattern.value)}
+                onChange={(e) => handleDayPatternChange(pattern.value, e.target.checked)}
+              >
+                {pattern.label}
+              </DayPatternCheckbox>
+            ))}
+          </CheckboxContainer>
+          <HelperText>Select which day patterns you prefer for your classes</HelperText>
         </FormGroup>
         
         <FormGroup>
-          <Label>Maximum Days per Week:</Label>
-          <CustomTimeSelector
-            value={`${constraints.max_days} Days`}
-            onChange={(value) => handleInputChange('max_days', parseInt(value.split(' ')[0]))}
-            options={["2 Days", "3 Days", "4 Days", "5 Days", "6 Days"]}
-          />
-          <HelperText>Maximum number of different days you want to have classes</HelperText>
+          <Label>Evening Classes:</Label>
+          <EveningClassesLabel 
+            htmlFor="evening-classes" 
+            checked={constraints.exclude_evening_classes}
+          >
+            <EveningClassesToggle>
+              <input
+                id="evening-classes"
+                type="checkbox"
+                checked={!constraints.exclude_evening_classes}
+                onChange={(e) => handleInputChange('exclude_evening_classes', !e.target.checked)}
+              />
+              <span></span>
+            </EveningClassesToggle>
+            Include classes starting at or after 6:00 PM
+          </EveningClassesLabel>
         </FormGroup>
-      </FormGrid>
-      
-      <FormGroup>
-        <Label>Preferred Day Patterns:</Label>
-        <CheckboxContainer>
-          {DAY_PATTERNS.map(pattern => (
-            <DayPatternCheckbox
-              key={pattern.value}
-              id={`pattern-${pattern.value}`}
-              checked={constraints.day_pattern.includes(pattern.value)}
-              onChange={(e) => handleDayPatternChange(pattern.value, e.target.checked)}
-            >
-              {pattern.label}
-            </DayPatternCheckbox>
-          ))}
-        </CheckboxContainer>
-        <HelperText>Select which day patterns you prefer for your classes</HelperText>
-      </FormGroup>
-      
-      <FormGroup>
-        <Label>Evening Classes:</Label>
-        <EveningClassesLabel 
-          htmlFor="evening-classes" 
-          checked={constraints.exclude_evening_classes}
-        >
-          <EveningClassesToggle>
-            <input
-              id="evening-classes"
-              type="checkbox"
-              checked={!constraints.exclude_evening_classes}
-              onChange={(e) => handleInputChange('exclude_evening_classes', !e.target.checked)}
-            />
-            <span></span>
-          </EveningClassesToggle>
-          Include classes starting at or after 6:00 PM
-        </EveningClassesLabel>
-      </FormGroup>
-      
-      <FormGroup>
-        <Label>Instructor Preferences (optional):</Label>
-        <div>
-          {constraints.required_courses.map(course => (
-            <InstructorRowContainer key={course}>
-              <InstructorLabel>{course}:</InstructorLabel>
-              <InstructorInputContainer>
-                <Select
-                  value={constraints.instructor_preferences[course] || ''}
-                  onChange={(e) => handleInstructorPreferenceChange(course, e.target.value)}
-                >
-                  <option value="">Any Instructor</option>
-                  {getInstructorsForCourse(course).map(instructor => (
-                    <option key={instructor} value={instructor}>
-                      {instructor}
-                    </option>
-                  ))}
-                </Select>
-              </InstructorInputContainer>
-            </InstructorRowContainer>
-          ))}
-        </div>
-        <HelperText>Select preferred instructors for specific courses</HelperText>
-      </FormGroup>
-      
-      <ButtonGroup>
-        <ResetButton type="button" onClick={resetForm}>
-          Reset Form
-        </ResetButton>
-        <SubmitButton type="submit" disabled={isLoading}>
-          {isLoading ? 'Generating...' : 'Generate Schedules'}
-        </SubmitButton>
-      </ButtonGroup>
-    </FormContainer>
+        
+        <FormGroup>
+          <Label>Instructor Preferences (optional):</Label>
+          <div>
+            {constraints.required_courses.map(course => (
+              <InstructorRowContainer key={course}>
+                <InstructorLabel>{course}:</InstructorLabel>
+                <InstructorInputContainer>
+                  <Select
+                    value={constraints.instructor_preferences[course] || ''}
+                    onChange={(e) => handleInstructorPreferenceChange(course, e.target.value)}
+                  >
+                    <option value="">Any Instructor</option>
+                    {getInstructorsForCourse(course).map(instructor => (
+                      <option key={instructor} value={instructor}>
+                        {instructor}
+                      </option>
+                    ))}
+                  </Select>
+                </InstructorInputContainer>
+              </InstructorRowContainer>
+            ))}
+          </div>
+          <HelperText>Select preferred instructors for specific courses</HelperText>
+        </FormGroup>
+        
+        <ButtonGroup>
+          <ResetButton type="button" onClick={resetForm}>
+            Reset Form
+          </ResetButton>
+          <SubmitButton type="submit" disabled={isLoading}>
+            {isLoading ? 'Generating...' : 'Generate Schedules'}
+          </SubmitButton>
+        </ButtonGroup>
+      </FormContainer>
+    </>
   );
 }
 
