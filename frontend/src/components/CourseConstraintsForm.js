@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 
 const FormContainer = styled.form`
@@ -176,6 +176,73 @@ const ErrorText = styled.div`
   margin-top: 4px;
 `;
 
+// Autocomplete components
+const AutocompleteContainer = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const AutocompleteInput = styled.input`
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  
+  &:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+  }
+`;
+
+const DropdownList = styled.ul`
+  position: absolute;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  z-index: 10;
+  list-style: none;
+`;
+
+const DropdownItem = styled.li`
+  padding: 8px 12px;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: #f5f8ff;
+  }
+  
+  &.highlighted {
+    background-color: #e1f0fe;
+  }
+`;
+
+const InstructorRowContainer = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 10px;
+`;
+
+const InstructorLabel = styled.div`
+  width: 80px;
+  font-size: 14px;
+  color: #555;
+`;
+
+const InstructorInputContainer = styled.div`
+  flex: 1;
+  position: relative;
+`;
+
 const DEFAULT_CONSTRAINTS = {
   required_courses: ["BIO103", "CSE327", "CSE332", "EEE452", "ENG115", "CHE101L", "PHY108L"],
   start_time_constraint: "11:00 AM",
@@ -203,6 +270,111 @@ const DEFAULT_COURSE_LIST = [
   "CSE373", "CSE425", "CSE473", "EEE141", "EEE111", "EEE154", "EEE201", "EEE312"
 ];
 
+// Sample faculty list - in a real implementation, this would come from the API
+const FACULTY_LIST = [
+  "NBM", "TBA", "ARF", "ADP", "HrR", "ShC", "TAN", "MZI", "RAK", "SRH", "AHN", 
+  "MIB", "AKO", "RHK", "JBR", "MKR", "NZM", "AST", "FAR", "MQU", "SKB", "NMF"
+];
+
+function AutocompleteDropdown({ 
+  options, 
+  value, 
+  onChange, 
+  placeholder, 
+  filterPredicate = (option, input) => option.includes(input.toUpperCase())
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [inputValue, setInputValue] = useState(value || '');
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [filteredOptions, setFilteredOptions] = useState([]);
+  const containerRef = useRef(null);
+  
+  // Update filtered options whenever input changes
+  useEffect(() => {
+    if (inputValue.trim() === '') {
+      setFilteredOptions(options.slice(0, 10)); // Show first 10 when empty
+    } else {
+      const filtered = options
+        .filter(option => filterPredicate(option, inputValue))
+        .slice(0, 10); // Limit to 10 results
+      setFilteredOptions(filtered);
+    }
+    setHighlightedIndex(0);
+  }, [inputValue, options, filterPredicate]);
+  
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
+  // Handle keyboard navigation
+  const handleKeyDown = (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex(prev => 
+        (prev < filteredOptions.length - 1) ? prev + 1 : prev
+      );
+      setIsOpen(true);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex(prev => (prev > 0) ? prev - 1 : 0);
+    } else if (e.key === 'Enter' && isOpen) {
+      e.preventDefault();
+      if (filteredOptions[highlightedIndex]) {
+        handleSelect(filteredOptions[highlightedIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+    }
+  };
+  
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value);
+    setIsOpen(true);
+  };
+  
+  const handleSelect = (option) => {
+    setInputValue(option);
+    onChange(option);
+    setIsOpen(false);
+  };
+  
+  return (
+    <AutocompleteContainer ref={containerRef}>
+      <AutocompleteInput
+        type="text"
+        value={inputValue}
+        onChange={handleInputChange}
+        onFocus={() => setIsOpen(true)}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+      />
+      {isOpen && filteredOptions.length > 0 && (
+        <DropdownList>
+          {filteredOptions.map((option, index) => (
+            <DropdownItem
+              key={option}
+              className={index === highlightedIndex ? 'highlighted' : ''}
+              onClick={() => handleSelect(option)}
+            >
+              {option}
+            </DropdownItem>
+          ))}
+        </DropdownList>
+      )}
+    </AutocompleteContainer>
+  );
+}
+
 function CourseConstraintsForm({ onSubmit, isLoading }) {
   // Try to load stored constraints from localStorage
   const [constraints, setConstraints] = useState(() => {
@@ -212,6 +384,9 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
   
   const [courseInput, setCourseInput] = useState('');
   const [errors, setErrors] = useState({});
+  const [showCourseDropdown, setShowCourseDropdown] = useState(false);
+  const [filteredCourses, setFilteredCourses] = useState([]);
+  const courseDropdownRef = useRef(null);
   
   // Save constraints to localStorage whenever they change
   const saveConstraints = (newConstraints) => {
@@ -219,23 +394,76 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
     setConstraints(newConstraints);
   };
   
-  const handleCourseAdd = (e) => {
+  // Update filtered courses when input changes
+  useEffect(() => {
+    if (courseInput.trim() === '') {
+      setFilteredCourses(DEFAULT_COURSE_LIST.slice(0, 10)); // Show first 10 when empty
+    } else {
+      const filtered = DEFAULT_COURSE_LIST
+        .filter(course => 
+          course.includes(courseInput.toUpperCase()) && 
+          !constraints.required_courses.includes(course)
+        )
+        .slice(0, 10); // Limit to 10 results
+      setFilteredCourses(filtered);
+    }
+  }, [courseInput, constraints.required_courses]);
+  
+  // Handle click outside to close course dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (courseDropdownRef.current && !courseDropdownRef.current.contains(event.target)) {
+        setShowCourseDropdown(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
+  const handleCourseSelect = (course) => {
+    if (!constraints.required_courses.includes(course)) {
+      const newCourses = [...constraints.required_courses, course];
+      saveConstraints({ ...constraints, required_courses: newCourses });
+    }
+    
+    setCourseInput('');
+    setShowCourseDropdown(false);
+  };
+  
+  const handleCourseInputChange = (e) => {
+    setCourseInput(e.target.value.toUpperCase());
+    setShowCourseDropdown(true);
+  };
+  
+  const handleCourseInputKeyDown = (e) => {
     if (e.key === 'Enter' && courseInput.trim()) {
       e.preventDefault();
-      const formattedCourse = courseInput.trim().toUpperCase();
       
-      if (!constraints.required_courses.includes(formattedCourse)) {
-        const newCourses = [...constraints.required_courses, formattedCourse];
-        saveConstraints({ ...constraints, required_courses: newCourses });
+      if (filteredCourses.length > 0 && filteredCourses[0].startsWith(courseInput.trim())) {
+        // Select first matching course
+        handleCourseSelect(filteredCourses[0]);
+      } else {
+        // Add custom course
+        handleCourseSelect(courseInput.trim());
       }
-      
-      setCourseInput('');
     }
   };
   
   const handleCourseRemove = (course) => {
     const newCourses = constraints.required_courses.filter(c => c !== course);
-    saveConstraints({ ...constraints, required_courses: newCourses });
+    
+    // Also remove any instructor preferences for this course
+    const newPreferences = { ...constraints.instructor_preferences };
+    delete newPreferences[course];
+    
+    saveConstraints({ 
+      ...constraints, 
+      required_courses: newCourses,
+      instructor_preferences: newPreferences
+    });
   };
   
   const handleInputChange = (field, value) => {
@@ -294,14 +522,6 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
     }
   };
   
-  // Filter suggested courses based on what's already selected
-  const getSuggestedCourses = () => {
-    const input = courseInput.toUpperCase();
-    return DEFAULT_COURSE_LIST.filter(
-      course => course.includes(input) && !constraints.required_courses.includes(course)
-    ).slice(0, 5);
-  };
-  
   return (
     <FormContainer onSubmit={handleSubmit}>
       <FormTitle>Custom Schedule Constraints</FormTitle>
@@ -321,22 +541,31 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
               </RemoveCourseBtn>
             </CourseTag>
           ))}
-          <CourseInput
-            id="course_input"
-            value={courseInput}
-            onChange={(e) => setCourseInput(e.target.value.toUpperCase())}
-            onKeyDown={handleCourseAdd}
-            placeholder="Add course..."
-            list="course-suggestions"
-          />
-          <datalist id="course-suggestions">
-            {getSuggestedCourses().map(course => (
-              <option key={course} value={course} />
-            ))}
-          </datalist>
+          <div ref={courseDropdownRef} style={{ flex: 1, position: 'relative' }}>
+            <CourseInput
+              id="course_input"
+              value={courseInput}
+              onChange={handleCourseInputChange}
+              onKeyDown={handleCourseInputKeyDown}
+              onFocus={() => setShowCourseDropdown(true)}
+              placeholder="Add course..."
+            />
+            {showCourseDropdown && filteredCourses.length > 0 && (
+              <DropdownList>
+                {filteredCourses.map(course => (
+                  <DropdownItem 
+                    key={course} 
+                    onClick={() => handleCourseSelect(course)}
+                  >
+                    {course}
+                  </DropdownItem>
+                ))}
+              </DropdownList>
+            )}
+          </div>
         </CoursesTagInput>
         {errors.required_courses && <ErrorText>{errors.required_courses}</ErrorText>}
-        <HelperText>Press Enter to add a course</HelperText>
+        <HelperText>Type to search courses or press Enter to add custom course</HelperText>
       </FormGroup>
       
       <FormGroup>
@@ -399,19 +628,17 @@ function CourseConstraintsForm({ onSubmit, isLoading }) {
         <Label>Instructor Preferences (optional):</Label>
         <div>
           {constraints.required_courses.map(course => (
-            <div key={course} style={{ marginBottom: '8px' }}>
-              <Label htmlFor={`instructor-${course}`} style={{ display: 'inline-block', width: '80px', marginBottom: 0 }}>
-                {course}:
-              </Label>
-              <Input
-                id={`instructor-${course}`}
-                type="text"
-                placeholder="Enter instructor code (e.g., NBM)"
-                value={constraints.instructor_preferences[course] || ''}
-                onChange={(e) => handleInstructorPreferenceChange(course, e.target.value)}
-                style={{ display: 'inline-block', width: 'calc(100% - 90px)' }}
-              />
-            </div>
+            <InstructorRowContainer key={course}>
+              <InstructorLabel>{course}:</InstructorLabel>
+              <InstructorInputContainer>
+                <AutocompleteDropdown
+                  options={FACULTY_LIST}
+                  value={constraints.instructor_preferences[course] || ''}
+                  onChange={(value) => handleInstructorPreferenceChange(course, value)}
+                  placeholder="Enter instructor code (e.g., NBM)"
+                />
+              </InstructorInputContainer>
+            </InstructorRowContainer>
           ))}
         </div>
         <HelperText>Enter instructor code for specific course requirements</HelperText>
