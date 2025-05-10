@@ -185,7 +185,7 @@ The goal is to deploy the current version first and then add user input function
 
 ### 9.1 Backend Deployment on Render
 
-- [ ] Update backend/requirements.txt to include all dependencies
+- [x] Update backend/requirements.txt to include all dependencies
   ```
   flask==2.0.1
   flask-cors==3.0.10
@@ -196,14 +196,14 @@ The goal is to deploy the current version first and then add user input function
   gunicorn==20.1.0
   ```
 
-- [ ] Create a Procfile in the backend directory
+- [x] Create a Procfile in the backend directory
   ```
   web: gunicorn 'app:create_app()' --bind=0.0.0.0:$PORT
   ```
 
-- [ ] Sign up for Render (https://render.com/) if you haven't already
+- [x] Sign up for Render (https://render.com/) if you haven't already
 
-- [ ] Create a new Web Service on Render:
+- [x] Create a new Web Service on Render:
   - Connect your GitHub repository
   - Name: nsu-scheduler-api
   - Root Directory: backend
@@ -212,22 +212,22 @@ The goal is to deploy the current version first and then add user input function
   - Start Command: `gunicorn 'app:create_app()' --bind=0.0.0.0:$PORT`
   - Plan: Free
 
-- [ ] Configure environment variables on Render (if needed):
+- [x] Configure environment variables on Render (if needed):
   - NSU_COURSE_URL: URL for the NSU course offerings page
   - REFRESH_INTERVAL: Time between data refreshes in seconds
 
-- [ ] Test the backend API after deployment:
+- [x] Test the backend API after deployment:
   - Visit https://nsu-scheduler-api.onrender.com/api/status
   - Verify it returns proper status JSON
 
 ### 9.2 Frontend Deployment on Render
 
-- [ ] Update the API base URL in frontend/src/utils/api.js:
+- [x] Update the API base URL in frontend/src/utils/api.js:
   ```javascript
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://nsu-scheduler-api.onrender.com/api';
   ```
 
-- [ ] Create a new Static Site on Render:
+- [x] Create a new Static Site on Render:
   - Connect your GitHub repository
   - Name: nsu-scheduler-frontend
   - Root Directory: frontend
@@ -236,7 +236,7 @@ The goal is to deploy the current version first and then add user input function
   - Environment Variables:
     - REACT_APP_API_URL: https://nsu-scheduler-api.onrender.com/api
 
-- [ ] Test the deployed frontend:
+- [x] Test the deployed frontend:
   - Visit the URL provided by Render
   - Verify it connects to the backend
   - Test toggling evening classes
@@ -244,27 +244,33 @@ The goal is to deploy the current version first and then add user input function
 
 ### 9.3 Backend CORS Configuration
 
-- [ ] Update the CORS configuration in backend/app.py:
+- [x] Update the CORS configuration in backend/app.py:
   ```python
   # Add your frontend URL to the allowed origins
-  CORS(app, origins=["https://nsu-scheduler-frontend.onrender.com"])
+  CORS(app, origins=["https://nsu-scheduler-frontend.onrender.com", "http://localhost:3000"])
   ```
 
-- [ ] Redeploy the backend to apply changes
+- [x] Redeploy the backend to apply changes
 
 ### 9.4 Setup Automatic Deployment
 
-- [ ] Configure GitHub repository to auto-deploy on push:
+- [x] Configure GitHub repository to auto-deploy on push:
   - Set up webhook from GitHub to Render
   - Test by making a small change and pushing to GitHub
   - Verify both backend and frontend update automatically
 
 ### 9.5 Monitor and Troubleshoot
 
-- [ ] Set up Render dashboard monitoring
-- [ ] Check logs for any errors
-- [ ] Monitor response times and performance
-- [ ] Test the application thoroughly after deployment
+- [x] Set up Render dashboard monitoring
+- [x] Check logs for any errors
+- [x] Monitor response times and performance
+- [x] Test the application thoroughly after deployment
+
+### 9.6 Blueprint Configuration
+
+- [x] Create render.yaml blueprint for the project
+- [x] Push blueprint to GitHub repository
+- [x] Group services in Render dashboard
 
 ## 10. User Input Interface Implementation (Future Enhancement)
 
