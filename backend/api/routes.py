@@ -144,10 +144,14 @@ def get_schedules():
         })
         
     except Exception as e:
+        error_msg = str(e)
+        if 'timeout' in error_msg.lower() or 'connection' in error_msg.lower():
+            error_msg = f"Cannot connect to NSU's course system. The university website may be offline during nighttime hours (typically after 12 AM Bangladesh time). Please try again during daytime hours. Error details: {error_msg}"
+        
         return jsonify({
-            'error': str(e),
+            'error': error_msg,
             'timestamp': time.time()
-        }), 500
+        }), 503  # Service Unavailable
 
 @api_bp.route('/schedules/generate', methods=['POST'])
 @cross_origin()
@@ -236,12 +240,11 @@ def generate_custom_schedules():
         
     except Exception as e:
         error_msg = str(e)
-        status_code = 500
+        status_code = 503  # Service Unavailable
         
         # Customize error message based on error type
-        if 'timeout' in error_msg.lower():
-            error_msg = f'Connection timeout while processing request. Please try again later. Details: {error_msg}'
-            status_code = 504
+        if 'timeout' in error_msg.lower() or 'connection' in error_msg.lower():
+            error_msg = f"Cannot connect to NSU's course system. The university website may be offline during nighttime hours (typically after 12 AM Bangladesh time). Please try again during daytime hours. Error details: {error_msg}"
         elif 'memory' in error_msg.lower():
             error_msg = f'Server memory error while processing request. Try simplifying your constraints. Details: {error_msg}'
             status_code = 500

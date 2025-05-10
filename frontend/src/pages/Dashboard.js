@@ -285,7 +285,13 @@ function Dashboard() {
             <ErrorMessage>
               <h4>Error {mode === 'default' ? 'loading' : 'generating'} schedules</h4>
               <p>{error?.message}</p>
-              {error?.message?.includes('timeout') && (
+              {error?.message?.includes('offline during nighttime') && (
+                <p className="suggestion">
+                  <strong>Note about Availability:</strong> NSU's course system is typically offline overnight 
+                  (after 12 AM Bangladesh time). The scheduler will be fully functional during daytime hours.
+                </p>
+              )}
+              {error?.message?.includes('timeout') && !error?.message?.includes('offline during nighttime') && (
                 <p className="suggestion">
                   The university website appears to be slow or unavailable. 
                   Please try again later or switch to default schedules mode.

@@ -68,6 +68,16 @@ const ConstraintItem = styled.li`
   margin-bottom: 4px;
 `;
 
+const InfoNote = styled.div`
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #e1f5fe;
+  border-left: 3px solid #29b6f6;
+  border-radius: 2px;
+  font-size: 12px;
+  color: #0277bd;
+`;
+
 function StatusPanel({ 
   lastUpdated, 
   totalSchedules, 
@@ -103,6 +113,14 @@ function StatusPanel({
     
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  };
+  
+  // Check if current time is between midnight and 8 AM Bangladesh time (UTC+6)
+  const isNighttime = () => {
+    const now = new Date();
+    const bdTime = new Date(now.getTime() + (6 * 60 * 60 * 1000)); // Convert to Bangladesh time
+    const hour = bdTime.getUTCHours();
+    return hour >= 0 && hour < 8; // Between midnight and 8 AM
   };
   
   return (
@@ -199,6 +217,13 @@ function StatusPanel({
           <RefreshCountdown>
             Refreshing in {countdown} seconds...
           </RefreshCountdown>
+        )}
+        
+        {isNighttime() && (
+          <InfoNote>
+            <strong>Note:</strong> NSU's course system is typically offline during nighttime hours 
+            (after 12 AM Bangladesh time). The scheduler will be fully functional during daytime hours.
+          </InfoNote>
         )}
       </PanelBody>
     </Panel>
